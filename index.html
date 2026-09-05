@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <title>User Login</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
+    <!--<style>
         * {
             margin: 0;
             padding: 0;
@@ -306,7 +306,309 @@
             background: #e0e0e0;
             transform: rotate(90deg);
         }
-    </style>
+    </style> -->
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+        min-height: 100vh;
+        background: #f0f2f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .login-container {
+        width: 100%;
+        max-width: 980px;
+        background: transparent;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 60px;
+    }
+
+    .login-header {
+        text-align: left;
+        margin-bottom: 20px;
+        flex: 1;
+    }
+
+    .login-header h2 {
+        color: #1877f2;
+        font-size: 58px;
+        font-weight: 700;
+        letter-spacing: -2px;
+        margin-bottom: 12px;
+    }
+
+    .login-header p {
+        color: #1c1e21;
+        font-size: 24px;
+        line-height: 1.25;
+        max-width: 480px;
+    }
+
+    #loginForm {
+        background: #fff;
+        width: 396px;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .15);
+    }
+
+    .form-group {
+        margin-bottom: 12px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 7px;
+        color: #606770;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+        width: 100%;
+        height: 52px;
+        padding: 14px 16px;
+        border: 1px solid #dddfe2;
+        border-radius: 6px;
+        font-size: 17px;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+    input[type="email"]:focus,
+    input[type="password"]:focus {
+        border-color: #1877f2;
+        box-shadow: 0 0 0 2px #e7f3ff;
+    }
+
+    .login-btn {
+        width: 100%;
+        height: 48px;
+        padding: 0 16px;
+        background: #1877f2;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 20px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background .2s, transform .15s;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .login-btn:hover {
+        background: #166fe5;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .login-btn:disabled {
+        opacity: .7;
+        cursor: not-allowed;
+    }
+
+    .remember-forgot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 16px 0;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #dadde1;
+        font-size: 14px;
+    }
+
+    .remember-me {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        color: #606770;
+    }
+
+    .remember-me input[type="checkbox"] {
+        width: auto;
+        cursor: pointer;
+    }
+
+    .forgot-link {
+        color: #1877f2;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .forgot-link:hover {
+        text-decoration: underline;
+    }
+
+    .loading {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,.4);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Keep your popup functionality, but match the new design */
+    .popup-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, .55);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .popup-box {
+        background: #fff;
+        border-radius: 10px;
+        padding: 30px;
+        max-width: 380px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 10px 35px rgba(0,0,0,.25);
+        position: relative;
+    }
+
+    .popup-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 35px;
+    }
+
+    .popup-icon.success {
+        background: #e7f3ff;
+        color: #1877f2;
+    }
+
+    .popup-icon.error {
+        background: #ffebe9;
+        color: #f02849;
+    }
+
+    .popup-icon.warning {
+        background: #fff4cc;
+        color: #f7b928;
+    }
+
+    .popup-icon.info {
+        background: #e7f3ff;
+        color: #1877f2;
+    }
+
+    .popup-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1c1e21;
+        margin-bottom: 10px;
+    }
+
+    .popup-message {
+        font-size: 15px;
+        color: #606770;
+        margin-bottom: 25px;
+        line-height: 1.5;
+    }
+
+    .popup-btn {
+        padding: 11px 30px;
+        border: none;
+        border-radius: 6px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        min-width: 120px;
+    }
+
+    .popup-btn.success,
+    .popup-btn.info {
+        background: #1877f2;
+        color: white;
+    }
+
+    .popup-btn.error {
+        background: #f02849;
+        color: white;
+    }
+
+    .popup-btn.warning {
+        background: #f7b928;
+        color: white;
+    }
+
+    .popup-close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: #f0f2f5;
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 16px;
+        color: #606770;
+    }
+
+    @media (max-width: 800px) {
+        .login-container {
+            flex-direction: column;
+            gap: 25px;
+            max-width: 396px;
+        }
+
+        .login-header {
+            text-align: center;
+        }
+
+        .login-header h2 {
+            font-size: 48px;
+        }
+
+        .login-header p {
+            font-size: 20px;
+        }
+
+        #loginForm {
+            width: 100%;
+        }
+    }
+</style>
+
 </head>
 <body>
     <div class="login-container">
